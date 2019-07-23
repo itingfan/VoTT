@@ -1,5 +1,5 @@
 # USAGE
-# python multi_object_tracking.py --video videos/soccer_01.mp4 --tracker csrt
+# python multi_object_tracking.py --video videos/soccer_01.mp4
 
 # import the necessary packages
 import argparse
