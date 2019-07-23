@@ -60,17 +60,15 @@ while True:
     for box in boxes:
         (x, y, w, h) = [int(v) for v in box]
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
     od_bboxes_pth = os.path.join(args['output'],
                                  os.path.splitext(os.path.basename(args["video"]))[0],
-                                 str(round(sec))+'.p')
+                                 str(round(sec,2))+'.p')
     od_bboxes = pickle.load(open(od_bboxes_pth, 'rb'))
     # average detection with tracking boxes
 
     track_rec = [(box[0], box[1], box[0] + box[2], box[1]+box[3])for box in boxes]
 
     mean_boxes = average_tracker_with_det(track_rec, od_bboxes)
-    print(mean_boxes)
     for box in mean_boxes:
         (x, y, x2, y2) = [int(v) for v in box]
         cv2.rectangle(frame, (x, y), (x2, y2), (255, 255, 0), 2)
