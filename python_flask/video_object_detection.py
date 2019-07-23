@@ -15,9 +15,6 @@ ap.add_argument("-o", "--output", type=str, default="detection_result",
 
 
 def video_od(video_pth, out_dir):
-
-    import pdb
-    pdb.set_trace()
     sec = 0
     fps = 15
     frame_rate = 1 / fps
