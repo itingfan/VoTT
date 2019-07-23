@@ -1,0 +1,1 @@
+FRAME_WIDE = 600

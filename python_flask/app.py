@@ -1,13 +1,25 @@
 from flask import Flask
 from flask import request
+import os
 from flask import jsonify
 from utils import Region, BoundingBox, VideoClip
 import logging
+from video_object_detection import video_od
 app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
     return 'Hello World!'
+
+@app.route('/video', methods=['POST'])
+def store_video():
+    video = request.files["video"]
+    video_pth = "static/test.mp4"
+    video.save(video_pth)
+    video_name = os.path.splitext(os.path.basename(video_pth))[0]
+    video_od(video_pth, os.path.join('output', video_name))
+
+    return 'Done'
 
 @app.route('/track', methods=['POST'])
 def track():

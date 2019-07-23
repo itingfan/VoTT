@@ -37,3 +37,7 @@ secrets.sh
 # complexity reports
 es6-src/
 report/
+
+# python cache
+python_flask/__pycache__
+python_flask/output
