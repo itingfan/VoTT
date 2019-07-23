@@ -10,6 +10,7 @@ import {
     IAsset,
     IAssetMetadata,
     IProject,
+    AssetType,
 } from "../../models/applicationState";
 import { createAction, createPayloadAction, IPayloadAction } from "./actionCreators";
 import { ExportAssetState, IExportResults } from "../../providers/export/exportProvider";
@@ -132,6 +133,11 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
     return async (dispatch: Dispatch) => {
         const assetService = new AssetService(project);
         const assets = await assetService.getAssets();
+        assets.forEach(async (asset) => {
+            if (asset.type == AssetType.Video || asset.type == AssetType.VideoFrame) {
+                await assetService.registerVideoAsset(asset.path, asset.name)    
+            }
+        });
         dispatch(loadProjectAssetsAction(assets));
 
         return assets;

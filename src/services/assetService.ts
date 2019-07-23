@@ -2,6 +2,7 @@ import MD5 from "md5.js";
 import _ from "lodash";
 import * as shortid from "shortid";
 import Guard from "../common/guard";
+import axios from "axios";
 import {
     IAsset, AssetType, IProject, IAssetMetadata, AssetState,
     IRegion, RegionType, ITFRecordMetadata,
@@ -14,6 +15,7 @@ import { TFRecordsReader } from "../providers/export/tensorFlowRecords/tensorFlo
 import { FeatureType } from "../providers/export/tensorFlowRecords/tensorFlowBuilder";
 import { appInfo } from "../common/appInfo";
 import { encodeFileURI } from "../common/utils";
+const fs = require('fs');
 
 /**
  * @name - Asset Service
@@ -132,6 +134,51 @@ export class AssetService {
      */
     public async getAssets(): Promise<IAsset[]> {
         return await this.assetProvider.getAssets();
+    }
+
+    /**
+     * Register video asset
+     * @param filePath - filepath of asset
+     * @param fileName - name of asset
+     */
+    public async registerVideoAsset(filePath: string, fileName?: string) {
+        Guard.empty(filePath);
+
+        const normalizedPath = filePath.toLowerCase();
+
+        // If the path is not already prefixed with a protocol
+        // then assume it comes from the local file system
+        if (!normalizedPath.startsWith("http://") &&
+            !normalizedPath.startsWith("https://") &&
+            !normalizedPath.startsWith("file:")) {
+            // First replace \ character with / the do the standard url encoding then encode unsupported characters
+            filePath = encodeFileURI(filePath, true);
+        }
+
+        const md5Hash = new MD5().update(filePath).digest("hex");
+        const pathParts = filePath.split(/[\\\/]/);
+        // Example filename: video.mp4#t=5
+        // fileNameParts[0] = "video"
+        // fileNameParts[1] = "mp4"
+        // fileNameParts[2] = "t=5"
+        fileName = fileName || pathParts[pathParts.length - 1];
+        const fileNameParts = fileName.split(".");
+        const extensionParts = fileNameParts[fileNameParts.length - 1].split(/[\?#]/);
+        const assetFormat = extensionParts[0];
+        
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(filePath))
+        const config = {
+            headers: {
+                'content-type': 'multipart/form-data'
+            }
+        }
+        const response = await axios.post(
+            "http://localhost:5000/video", 
+            formData, 
+            config);
+        
+        return 'Done';
     }
 
     /**
