@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import request
-<<<<<<< HEAD
 import os
 from flask import jsonify
 import logging
