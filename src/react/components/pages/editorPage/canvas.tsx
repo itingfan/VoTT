@@ -4,7 +4,7 @@ import { CanvasTools } from "vott-ct";
 import { RegionData } from "vott-ct/lib/js/CanvasTools/Core/RegionData";
 import {
     EditorMode, IAssetMetadata,
-    IProject, IRegion, RegionType,
+    IProject, IRegion, RegionType, AssetType,
 } from "../../../../models/applicationState";
 import CanvasHelpers from "./canvasHelpers";
 import { AssetPreview, ContentSource } from "../../common/assetPreview/assetPreview";
@@ -26,6 +26,7 @@ export interface ICanvasProps extends React.Props<Canvas> {
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
     onSelectedRegionsChanged?: (regions: IRegion[]) => void;
     onCanvasRendered?: (canvas: HTMLCanvasElement) => void;
+    onTimeChanged?:(time: number) => void;
 }
 
 export interface ICanvasState {
@@ -74,6 +75,8 @@ export default class Canvas extends React.Component<ICanvasProps, ICanvasState> 
     }
 
     public componentDidUpdate = async (prevProps: Readonly<ICanvasProps>, prevState: Readonly<ICanvasState>) => {
+        if(this.props.selectedAsset.regions.length !== 0)
+            console.log(this.props.selectedAsset.regions);
         // Handles asset changing
         if (this.props.selectedAsset !== prevProps.selectedAsset) {
             this.setState({ currentAsset: this.props.selectedAsset });
@@ -403,7 +406,12 @@ export default class Canvas extends React.Component<ICanvasProps, ICanvasState> 
     }
 
     private renderChildren = () => {
+        const childrenType = this.props.children.props.asset.type;
+        if(childrenType === AssetType.Video || childrenType === AssetType.VideoFrame) {
+            // const video = this.props
+        }
         return React.cloneElement(this.props.children, {
+            onTimeChanged: this.props.onTimeChanged,
             onAssetChanged: this.onAssetChanged,
             onLoaded: this.onAssetLoaded,
             onError: this.onAssetError,
@@ -411,6 +419,7 @@ export default class Canvas extends React.Component<ICanvasProps, ICanvasState> 
             onDeactivated: this.onAssetDeactivated,
         });
     }
+
 
     /**
      * Raised when the asset bound to the asset preview has changed

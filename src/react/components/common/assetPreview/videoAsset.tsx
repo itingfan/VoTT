@@ -21,6 +21,8 @@ export interface IVideoAssetProps extends IAssetProps, React.Props<VideoAsset> {
     timestamp?: number;
     /** The event handler that is fired when a child video frame is selected (ex. paused, seeked) */
     onChildAssetSelected?: (asset: IAsset) => void;
+
+    onTimeChanged? :(time: number) => void;
 }
 
 /** VideoAsset internal component state */
@@ -135,6 +137,7 @@ export class VideoAsset extends React.Component<IVideoAssetProps> {
     }
 
     public componentDidUpdate(prevProps: Readonly<IVideoAssetProps>) {
+        console.log("video assistant", this.props);
         if (this.props.asset.id !== prevProps.asset.id) {
             this.setState({ loaded: false });
         }
@@ -225,6 +228,9 @@ export class VideoAsset extends React.Component<IVideoAssetProps> {
     }
 
     private onVideoStateChange = (state: Readonly<IVideoPlayerState>, prev: Readonly<IVideoPlayerState>) => {
+        const currentTime = this.getVideoPlayerState().currentTime;
+        console.log("video time:", currentTime);
+        this.props.onTimeChanged(currentTime)
         if (!this.state.loaded && state.readyState === 4 && state.readyState !== prev.readyState) {
             // Video initial load complete
             this.raiseLoaded();

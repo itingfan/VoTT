@@ -31,6 +31,7 @@ import Alert from "../../common/alert/alert";
 import Confirm from "../../common/confirm/confirm";
 import { ActiveLearningService } from "../../../../services/activeLearningService";
 import { toast } from "react-toastify";
+import CanvasDisplay from "./canvasDisplay";
 
 /**
  * Properties for Editor Page
@@ -78,6 +79,8 @@ export interface IEditorPageState {
     isValid: boolean;
     /** Whether the show invalid region warning alert should display */
     showInvalidRegionWarning: boolean;
+
+    currentTime: number;
 }
 
 function mapStateToProps(state: IApplicationState) {
@@ -115,6 +118,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         thumbnailSize: this.props.appSettings.thumbnailSize || { width: 175, height: 155 },
         isValid: true,
         showInvalidRegionWarning: false,
+        currentTime: 0
     };
 
     private activeLearningService: ActiveLearningService = null;
@@ -222,7 +226,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                         editorMode={this.state.editorMode}
                                         selectionMode={this.state.selectionMode}
                                         project={this.props.project}
-                                        lockedTags={this.state.lockedTags}>
+                                        lockedTags={this.state.lockedTags}
+                                        onTimeChanged={this.onTimeChanged}>
                                         <AssetPreview
                                             additionalSettings={this.state.additionalSettings}
                                             autoPlay={true}
@@ -232,6 +237,9 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                             asset={this.state.selectedAsset.asset}
                                             childAssets={this.state.childAssets} />
                                     </Canvas>
+                                }
+                                {selectedAsset &&
+                                    <CanvasDisplay actions={this.props.actions} assets={this.state.assets} childAssets={this.state.childAssets} project={this.props.project} selectedAsset={this.state.selectedAsset} currentTime={this.state.currentTime}>CanvasDisplay</CanvasDisplay>
                                 }
                             </div>
                         </div>
@@ -269,6 +277,16 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             </div>
         );
     }
+
+
+    private onTimeChanged = (time: number) => {
+        this.setState({currentTime: time});
+        console.log("callBack:", this.state.currentTime);
+        // if(Math.abs(time - this.state.currentTime) >= 0.5 && Math.abs(time - this.state.currentTime) <= 1)
+        //     this.setState({currentTime: time});
+    }
+
+
 
     private onPageClick = () => {
         this.setState({
