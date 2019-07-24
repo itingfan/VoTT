@@ -5,6 +5,7 @@ from flask import jsonify
 from utils import *
 import logging
 from video_object_detection import video_od
+from multi_object_tracking import track_video
 app = Flask(__name__)
 
 @app.route('/')
@@ -30,11 +31,9 @@ def track():
     init_regions = decode_init_regions_json(json_request['init_regions'])
     app.logger.info(init_regions)
 
-    timestamp_region_pairs = []
-    timestamp_region_pairs.append(TimestampRegionsPair(0.0, [init_regions[0], init_regions[1]]).to_dict())
-    timestamp_region_pairs.append(TimestampRegionsPair(0.15, [init_regions[1], init_regions[2]]).to_dict())
-    timestamp_region_pairs.append(TimestampRegionsPair(0.3, [init_regions[2], init_regions[1]]).to_dict())
-    return jsonify(timestamp_region_pairs)
+    result = track_video(video_clip, init_regions)
+    app.logger.info(result)
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True,host='0.0.0.0')

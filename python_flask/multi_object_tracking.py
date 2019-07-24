@@ -69,7 +69,7 @@ def track_video(init_regions, video_clip):
                                       default_tag,
                                       default_points,
                                       BoundingBox(mean_box[0], mean_box[1], mean_box[2]-mean_box[0], mean_box[3]-mean_box[1])))
-        TimestampRegionsPair_list.append(TimestampRegionsPair(round(sec, 6), region_list))
+        TimestampRegionsPair_list.append(TimestampRegionsPair(round(sec, 6), region_list).to_dict())
         if cv2_visual:
             # loop over the bounding boxes and draw then on the frame
             for box in boxes:
