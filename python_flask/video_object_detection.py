@@ -28,15 +28,15 @@ def video_od(video_pth, out_dir):
         # grab the current frame, then handle if we are using a
         # VideoStream or VideoCapture object
         vs.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
-        sec += frame_rate
+
         frame = vs.read()
         frame = frame[1]
         if frame is None:
             break
-
         frame = imutils.resize(frame, width=FRAME_WIDE)
         od_bboxes = object_detector("detect-body.onnx").detect(frame)
         pickle.dump(od_bboxes, open(os.path.join(out_dir, str(round(sec, 2))+'.p'), 'wb'))
+        sec += frame_rate
 
 
 if __name__ == '__main__':
