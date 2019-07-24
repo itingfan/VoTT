@@ -33,6 +33,7 @@ import { ActiveLearningService } from "../../../../services/activeLearningServic
 import { toast } from "react-toastify";
 import { RegionType, VideoClip, TimestampRegionPair } from "../../../../models/applicationState";
 import axios, { AxiosRequestConfig } from "axios";
+import CanvasDisplay from "./canvasDisplay";
 
 /**
  * Properties for Editor Page
@@ -80,6 +81,8 @@ export interface IEditorPageState {
     isValid: boolean;
     /** Whether the show invalid region warning alert should display */
     showInvalidRegionWarning: boolean;
+
+    currentTime: number;
 }
 
 function mapStateToProps(state: IApplicationState) {
@@ -117,6 +120,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         thumbnailSize: this.props.appSettings.thumbnailSize || { width: 175, height: 155 },
         isValid: true,
         showInvalidRegionWarning: false,
+        currentTime: 0
     };
 
     private activeLearningService: ActiveLearningService = null;
@@ -224,7 +228,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                         editorMode={this.state.editorMode}
                                         selectionMode={this.state.selectionMode}
                                         project={this.props.project}
-                                        lockedTags={this.state.lockedTags}>
+                                        lockedTags={this.state.lockedTags}
+                                        onTimeChanged={this.onTimeChanged}>
                                         <AssetPreview
                                             additionalSettings={this.state.additionalSettings}
                                             autoPlay={true}
@@ -234,6 +239,9 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                             asset={this.state.selectedAsset.asset}
                                             childAssets={this.state.childAssets} />
                                     </Canvas>
+                                }
+                                {selectedAsset &&
+                                    <CanvasDisplay actions={this.props.actions} assets={this.state.assets} childAssets={this.state.childAssets} project={this.props.project} selectedAsset={this.state.selectedAsset} currentTime={this.state.currentTime}>CanvasDisplay</CanvasDisplay>
                                 }
                             </div>
                         </div>
@@ -278,6 +286,12 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         });
     }
 
+    private onTimeChanged = (time: number) => {
+        this.setState({currentTime: time});
+        console.log("callBack:", this.state.currentTime);
+        // if(Math.abs(time - this.state.currentTime) >= 0.5 && Math.abs(time - this.state.currentTime) <= 1)
+        //     this.setState({currentTime: time});
+    }
     /**
      * Called when the asset side bar is resized
      * @param newWidth The new sidebar width
