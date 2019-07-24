@@ -33,7 +33,6 @@ import { ActiveLearningService } from "../../../../services/activeLearningServic
 import { toast } from "react-toastify";
 import { RegionType, VideoClip, TimestampRegionPair } from "../../../../models/applicationState";
 import axios, { AxiosRequestConfig } from "axios";
-import ImportService from "../../../../services/importService";
 
 /**
  * Properties for Editor Page
@@ -673,31 +672,6 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         } catch (e) {
             throw new AppError(ErrorCode.ActiveLearningPredictionError, "Error predicting regions");
         }
-    }
-
-    private trackerRegions = async (parentPath: string, timestamp: number, regions: IRegion[]) => {
-        const importService = new ImportService();
-        const filePath = `${parentPath}#t=${timestamp}`;
-
-        // Create Asset 
-        const returnAsset = importService.generateAssetFromFrame(filePath);
-        /*
-        var newFrameAsset: IAssetMetadata;
-        try {
-            returnAsset.then(function (result) {
-                newFrameAsset = result;
-            });
-
-            newFrameAsset.asset.timestamp = timestamp;
-            newFrameAsset.asset.state = 0;
-            newFrameAsset.regions = regions;
-            
-            await this.onAssetMetadataChanged(newFrameAsset);
-            
-        } catch (e) {
-            throw new AppError(ErrorCode.TrackerCreateAssetError, "Error creating tracker assets and regions");
-        }
-        */
     }
 
     /**

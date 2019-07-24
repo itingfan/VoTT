@@ -102,14 +102,7 @@ export default class ImportService implements IImportService {
 
         return generatedAssetMetadata;
     }
-
-    public async generateAssetFromFrame(filePath: string): Promise<IAssetMetadata> {
-        const asset = AssetService.createAssetFromFilePath(filePath);
-        const assetState = AssetState.NotVisited;
-
-        return await this.createAssetMetadata(asset, assetState, []);
-    }
-
+    
     /**
      * Generate assets for V1 Image Project frames and regions
      * @param v1Project - v1 Project content and file information
