@@ -493,21 +493,33 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         // Only update asset metadata if state changes or is different
         if (initialState !== assetMetadata.asset.state || this.state.selectedAsset !== assetMetadata) {
 
+            await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
+
             // Pause at next frame will trigger this function. Add this to avoid trigger multiple time
-            if (assetMetadata.regions.length !== 0)
+            if (assetMetadata.regions.length !== this.state.selectedAsset.regions.length)
             {
                 // 1. Get all regions with current update region
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
-                const videoClip: VideoClip = {id: "cvs_team_video", startTimestamp: 0.0, endTimestamp: 10.0};
+
+                const videoClip: VideoClip = {id: "cvs_team_video", startTimestamp: assetMetadata.asset.timestamp, endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
-                // const timeStampRegionsPair = await this.track(videoClip, regions);
-                // TEST: assetMetadata.regions.push({id:"weichih-test2", type: RegionType.Square, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+                // const responses = await this.track(videoClip, regions);
                 // 4. create/update assetMetadata
+                // responses.forEach((response) => {
+                    // create assetMetadata  
+                //
+                //}
+
+                //Test to create n+1 to end Asset and update .Vott
+                assetMetadata.asset.timestamp = 20.06;
+                assetMetadata.asset.id = "VoTT-Test2";
+                assetMetadata.asset.state = 0;
+                assetMetadata.regions = [];
+                assetMetadata.regions.push({id:"VoTT-Region-test2", type: RegionType.Square, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+                await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
             }
-            
-            await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
         }
 
         await this.props.actions.saveProject(this.props.project);
