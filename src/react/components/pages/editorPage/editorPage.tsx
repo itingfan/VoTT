@@ -33,6 +33,7 @@ import { ActiveLearningService } from "../../../../services/activeLearningServic
 import { toast } from "react-toastify";
 import { RegionType, VideoClip, TimestampRegionPair } from "../../../../models/applicationState";
 import axios, { AxiosRequestConfig } from "axios";
+import ImportService from "../../../../services/importService";
 
 /**
  * Properties for Editor Page
@@ -427,10 +428,17 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
      private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
         const requestHeader = this.createRequestConfigForTracking();
-        const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
-        console.log(response.data);
-        const result: TimestampRegionPair[] = [];
-        return result;
+        //const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
+        //console.log(response.data);
+        const results: TimestampRegionPair[] = [];
+        const fpsmore = 1/15;
+        const fakeRegions: IRegion[] = [];
+        fakeRegions.push({id:"weichih", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+        fakeRegions.push({id:"kualu", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
+        fakeRegions.push({id:"liang", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
+        const fakeResult: TimestampRegionPair = {timestamp: clip.startTimestamp+fpsmore, regions:fakeRegions};
+        results.push(fakeResult);
+        return results; 
     }
 
      private createRequestConfigForTracking(): AxiosRequestConfig {
@@ -505,20 +513,13 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 const videoClip: VideoClip = {id: "cvs_team_video", startTimestamp: assetMetadata.asset.timestamp, endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
-                // const responses = await this.track(videoClip, regions);
+                const responses = await this.track(videoClip, regions);
                 // 4. create/update assetMetadata
-                // responses.forEach((response) => {
+                responses.forEach((response) => {
                     // create assetMetadata  
-                //
-                //}
-
+                    this.trackerRegions(rootAsset.path, response.timestamp, response.regions);
+                });
                 //Test to create n+1 to end Asset and update .Vott
-                assetMetadata.asset.timestamp = 20.06;
-                assetMetadata.asset.id = "VoTT-Test2";
-                assetMetadata.asset.state = 0;
-                assetMetadata.regions = [];
-                assetMetadata.regions.push({id:"VoTT-Region-test2", type: RegionType.Square, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
-                await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
             }
         }
 
@@ -649,6 +650,31 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         } catch (e) {
             throw new AppError(ErrorCode.ActiveLearningPredictionError, "Error predicting regions");
         }
+    }
+
+    private trackerRegions = async (parentPath: string, timestamp: number, regions: IRegion[]) => {
+        const importService = new ImportService();
+        const filePath = `${parentPath}#t=${timestamp}`;
+
+        // Create Asset 
+        const returnAsset = importService.generateAssetFromFrame(filePath);
+        /*
+        var newFrameAsset: IAssetMetadata;
+        try {
+            returnAsset.then(function (result) {
+                newFrameAsset = result;
+            });
+
+            newFrameAsset.asset.timestamp = timestamp;
+            newFrameAsset.asset.state = 0;
+            newFrameAsset.regions = regions;
+            
+            await this.onAssetMetadataChanged(newFrameAsset);
+            
+        } catch (e) {
+            throw new AppError(ErrorCode.TrackerCreateAssetError, "Error creating tracker assets and regions");
+        }
+        */
     }
 
     /**
