@@ -26,6 +26,7 @@ export interface ICanvasProps extends React.Props<Canvas> {
     onAssetMetadataChanged?: (assetMetadata: IAssetMetadata) => void;
     onSelectedRegionsChanged?: (regions: IRegion[]) => void;
     onCanvasRendered?: (canvas: HTMLCanvasElement) => void;
+    onTimeChanged?:(time: number) => void;
 }
 
 export interface ICanvasState {
@@ -404,6 +405,7 @@ export default class Canvas extends React.Component<ICanvasProps, ICanvasState> 
 
     private renderChildren = () => {
         return React.cloneElement(this.props.children, {
+            onTimeChanged: this.props.onTimeChanged,
             onAssetChanged: this.onAssetChanged,
             onLoaded: this.onAssetLoaded,
             onError: this.onAssetError,
