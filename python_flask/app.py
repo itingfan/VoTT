@@ -25,7 +25,6 @@ def store_video():
 
     with open(video_pth, 'wb') as f:
         f.write(request.data)
-        f.close()
 
     video_name = os.path.splitext(os.path.basename(video_pth))[0]
     video_od(video_pth, os.path.join('output', video_name))
@@ -50,4 +49,4 @@ def track():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=int('5000'))

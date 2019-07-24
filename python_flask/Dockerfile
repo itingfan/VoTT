@@ -2,5 +2,4 @@
 FROM vott_flask_base
 COPY . /app
 WORKDIR /app
-ENTRYPOINT ["python3"]
-CMD ["app.py"]
+CMD ["gunicorn"  , "-b", "0.0.0.0:5000", "--workers", "3", "--timeout", "600", "app:app"]
