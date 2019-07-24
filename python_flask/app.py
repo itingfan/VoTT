@@ -20,6 +20,9 @@ def store_video():
     extension = mimetypes.guess_extension(data_type)
     video_file_name = data_id + extension
     video_pth = os.path.join('static', video_file_name)
+    if os.path.exists(video_pth) and os.path.exists(os.path.join('output', video_name)):
+        return 'Done'
+
     with open(video_pth, 'wb') as f:
         f.write(request.data)
         f.close()
