@@ -42,7 +42,10 @@ def track():
     init_regions = decode_init_regions_json(json_request['init_regions'])
     app.logger.info(init_regions)
 
-    result = track_video(init_regions, video_clip, app)
+    try:
+        result = track_video(init_regions, video_clip, app)
+    except Exception as exp:
+        app.logger.info(exp)
     app.logger.info(result)
     return jsonify(result)
 
