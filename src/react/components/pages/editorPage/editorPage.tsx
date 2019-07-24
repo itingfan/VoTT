@@ -451,9 +451,12 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         //regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
         //let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
         //result.push(pair);
-        response.data.array.forEach(element => {
-            result.push(element.timestamp, element.regions)
-        });
+        if(response && response.data && response.data.array) {
+            response.data.array.forEach(element => {
+                result.push(element.timestamp, element.regions)
+            });
+        }
+
         return result;
     }
 
@@ -532,7 +535,11 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                             endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
+                console.log("==================== Started tracking ======================");
                 const responses = await this.track(videoClip, regions);
+                console.log("==================== Ended tracking ======================");
+                console.log(responses);
+
                 // 4. create/update assetMetadata
                 responses.forEach((response) => {
                     // create assetMetadata  
