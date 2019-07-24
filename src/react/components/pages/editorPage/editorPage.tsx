@@ -430,6 +430,15 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
         console.log(response.data);
         const result: TimestampRegionPair[] = [];
+        const regions: IRegion[] = [];
+        regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+        regions.push({id:"kualu", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
+        regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
+        let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
+        result.push(pair);
+        //response.data.array.forEach(element => {
+        //    result.push(element.timestamp, element.regions)
+        //});
         return result;
     }
 
@@ -496,29 +505,26 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
 
             // Pause at next frame will trigger this function. Add this to avoid trigger multiple time
-            if (assetMetadata.regions.length !== this.state.selectedAsset.regions.length)
+            if (assetMetadata.regions.length > 0)
             {
                 // 1. Get all regions with current update region
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
 
-                const videoClip: VideoClip = {id: "cvs_team_video", startTimestamp: assetMetadata.asset.timestamp, endTimestamp: 10.0};
+                const videoClip: VideoClip = {id: [assetMetadata.asset.parent.id, assetMetadata.asset.format].join("."), 
+                                            startTimestamp: assetMetadata.asset.timestamp, 
+                                            endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
-                // const responses = await this.track(videoClip, regions);
+                /*const responses = await this.track(videoClip, regions);
                 // 4. create/update assetMetadata
-                // responses.forEach((response) => {
+                responses.forEach((response) => {
                     // create assetMetadata  
-                //
-                //}
-
-                //Test to create n+1 to end Asset and update .Vott
-                assetMetadata.asset.timestamp = 20.06;
-                assetMetadata.asset.id = "VoTT-Test2";
-                assetMetadata.asset.state = 0;
-                assetMetadata.regions = [];
-                assetMetadata.regions.push({id:"VoTT-Region-test2", type: RegionType.Square, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
-                await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
+                    const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
+                    let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
+                    assetMetadataToAdd.then((metadata) => metadata.regions = response.regions);
+                    this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
+                });*/
             }
         }
 
@@ -539,6 +545,20 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         }
 
         this.setState({ childAssets, assets, isValid: true });
+    }
+
+    /**
+    * Create asset from tracking response
+    */
+    private createAssetFromPrediction = (prediction: TimestampRegionPair, rootAsset: IAsset): IAsset => {
+        let filePath = `${rootAsset.path}#t=${prediction.timestamp.toFixed(6)}`;
+        const asset = AssetService.createAssetFromFilePath(filePath);
+        asset.state = AssetState.NotVisited;
+        asset.type = AssetType.VideoFrame;
+        asset.parent = rootAsset;
+        asset.timestamp = prediction.timestamp;
+        asset.size = rootAsset.size;
+        return asset;
     }
 
     /**
