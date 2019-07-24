@@ -87,13 +87,6 @@ Then build the docker for object tracking service
    >
    > When running locally with `npm`, both the electron and the browser versions of the application will start. One major difference is that the electron version can access the local file system.
 
-To use the object tracking functionality, build the docker image in python_flask folder:
-    ```bash
-     cd python_flask
-     docker build -t vott_object_tracking_flask .
-     docker run -p 5000:5000 vott_object_tracking_flask
-    ```
-
 ### Run as Web Application
 
 Using a modern Web browser, VoTT can be loaded from: [https://vott.z5.web.core.windows.net](https://vott.z5.web.core.windows.net)
