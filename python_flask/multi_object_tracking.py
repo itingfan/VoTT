@@ -15,15 +15,23 @@ cv2_visual = False
 default_type, default_tag, default_points = 2, None, None
 
 
-def track_video(init_regions, video_clip):
+def track_video(init_regions, video_clip, app):
 
+    app.logger.info("started tracking video {}")
     dic_idx_to_id = {i_idx : i_init.id for i_idx, i_init in enumerate(init_regions)}
     video_pth = video_clip.id
 
+    app.logger.info("creating tracker")
     # initialize OpenCV's special multi-object tracker
-    trackers = cv2.MultiTracker_create()
+    try:
+        trackers = cv2.MultiTracker_create()
+    except Exception as exp:
+        app.logger.info(exp)
+        raise
 
+    app.logger.info("video loading")
     vs = cv2.VideoCapture(video_pth)
+    app.logger.info("video loaded")
     fps = 15
     print("fps: {}".format(fps))
 
