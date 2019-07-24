@@ -74,6 +74,15 @@ VoTT requires [NodeJS (>= 10.x, Dubnium) and NPM](https://github.com/nodejs/Rele
     npm ci
     npm start
    ```
+
+Then build the docker for object tracking service
+   
+   ```bash
+    cd python_flask
+    docker build -t vott_object_tracking .
+    docker run -p 5000:5000 vott_object_tracking
+   ```
+
    > **IMPORTANT**
    >
    > When running locally with `npm`, both the electron and the browser versions of the application will start. One major difference is that the electron version can access the local file system.

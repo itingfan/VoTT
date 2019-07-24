@@ -24,7 +24,7 @@ def store_video():
 @app.route('/track', methods=['POST'])
 def track():
     json_request = request.get_json()
-    video_clip = decode_videoclip_json(json_request['clip'])
+    video_clip = decode_video_clip_json(json_request['clip'])
     app.logger.info(video_clip)
     
     init_regions = decode_init_regions_json(json_request['init_regions'])

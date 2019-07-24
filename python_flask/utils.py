@@ -44,9 +44,9 @@ class TimestampRegionsPair:
 
     def to_dict(self):
         return {'timestamp': self.timestamp,
-                'regions': [r.to_dict() for r in self.regions]}
+                'regions': [r.to_dict() for r in self.regions] if self.regions else None}
 
-def decode_videoclip_json(video_clip_json):
+def decode_video_clip_json(video_clip_json):
     return VideoClip(video_clip_json['id'], video_clip_json['startTimestamp'], video_clip_json['endTimestamp'])
 
 def decode_init_regions_json(init_regions_json):
