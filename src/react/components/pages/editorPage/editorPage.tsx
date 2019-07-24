@@ -33,6 +33,7 @@ import { ActiveLearningService } from "../../../../services/activeLearningServic
 import { toast } from "react-toastify";
 import { RegionType, VideoClip, TimestampRegionPair } from "../../../../models/applicationState";
 import axios, { AxiosRequestConfig } from "axios";
+import ImportService from "../../../../services/importService";
 
 /**
  * Properties for Editor Page
@@ -430,6 +431,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         //const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
         //console.log(response.data);
         const result: TimestampRegionPair[] = [];
+        const fpsmore = 1/15;
         const regions: IRegion[] = [];
         regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
         regions.push({id:"kualu", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
@@ -671,6 +673,31 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         } catch (e) {
             throw new AppError(ErrorCode.ActiveLearningPredictionError, "Error predicting regions");
         }
+    }
+
+    private trackerRegions = async (parentPath: string, timestamp: number, regions: IRegion[]) => {
+        const importService = new ImportService();
+        const filePath = `${parentPath}#t=${timestamp}`;
+
+        // Create Asset 
+        const returnAsset = importService.generateAssetFromFrame(filePath);
+        /*
+        var newFrameAsset: IAssetMetadata;
+        try {
+            returnAsset.then(function (result) {
+                newFrameAsset = result;
+            });
+
+            newFrameAsset.asset.timestamp = timestamp;
+            newFrameAsset.asset.state = 0;
+            newFrameAsset.regions = regions;
+            
+            await this.onAssetMetadataChanged(newFrameAsset);
+            
+        } catch (e) {
+            throw new AppError(ErrorCode.TrackerCreateAssetError, "Error creating tracker assets and regions");
+        }
+        */
     }
 
     /**
