@@ -526,6 +526,12 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                     let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
                     assetMetadataToAdd.then((metadata) => {
                         metadata.regions = response.regions;
+                        const pair = _.keyBy(predictedAsset, predictedAsset.id);
+                        var newProject = {...this.props.project, predictedAsset}; 
+                        // Save to .Vott file
+                        this.props.actions.saveProject(newProject);
+
+                        // Save a Asset.json file
                         this.props.actions.saveAssetMetadata(this.props.project, metadata, true);
                     });
                 });
