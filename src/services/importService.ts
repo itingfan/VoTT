@@ -102,7 +102,7 @@ export default class ImportService implements IImportService {
 
         return generatedAssetMetadata;
     }
-
+    
     /**
      * Generate assets for V1 Image Project frames and regions
      * @param v1Project - v1 Project content and file information
