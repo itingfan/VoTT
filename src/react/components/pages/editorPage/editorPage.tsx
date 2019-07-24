@@ -427,8 +427,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
      private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
         const requestHeader = this.createRequestConfigForTracking();
-        const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
-        console.log(response.data);
+        //const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
+        //console.log(response.data);
         const result: TimestampRegionPair[] = [];
         const regions: IRegion[] = [];
         regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
@@ -471,6 +471,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         }
 
         const initialState = assetMetadata.asset.state;
+        const assetService = new AssetService(this.props.project);
 
         // The root asset can either be the actual asset being edited (ex: VideoFrame) or the top level / root
         // asset selected from the side bar (image/video).
@@ -505,7 +506,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
 
             // Pause at next frame will trigger this function. Add this to avoid trigger multiple time
-            if (assetMetadata.regions.length > 0)
+            if (assetMetadata.regions.length > 0 && this.props.project.videoSettings.tracking)
             {
                 // 1. Get all regions with current update region
                 const regions = assetMetadata.regions;
@@ -516,21 +517,22 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                             endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
-                /*const responses = await this.track(videoClip, regions);
+                const responses = await this.track(videoClip, regions);
                 // 4. create/update assetMetadata
                 responses.forEach((response) => {
                     // create assetMetadata  
                     const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
                     let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
-                    assetMetadataToAdd.then((metadata) => metadata.regions = response.regions);
-                    this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
-                });*/
+                    assetMetadataToAdd.then((metadata) => {
+                        metadata.regions = response.regions;
+                        this.props.actions.saveAssetMetadata(this.props.project, metadata, true);
+                    });
+                });
             }
         }
 
         await this.props.actions.saveProject(this.props.project);
 
-        const assetService = new AssetService(this.props.project);
         const childAssets = assetService.getChildAssets(rootAsset);
 
         // Find and update the root asset in the internal state
@@ -551,7 +553,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
     * Create asset from tracking response
     */
     private createAssetFromPrediction = (prediction: TimestampRegionPair, rootAsset: IAsset): IAsset => {
-        let filePath = `${rootAsset.path}#t=${prediction.timestamp.toFixed(6)}`;
+        let filePath = `${rootAsset.path}#t=${prediction.timestamp}`;
         const asset = AssetService.createAssetFromFilePath(filePath);
         asset.state = AssetState.NotVisited;
         asset.type = AssetType.VideoFrame;
