@@ -301,17 +301,16 @@ export class ObjectDetection {
     }
 
     private async track_stub(): Promise<void> {
-        const videoClip: VideoClip = {id: "cvs_team_video", startTimestamp: 0.0, endTimestamp: 10.0};
+        const videoClip: VideoClip = {id: "/app/static/test.mp4", startTimestamp: 0.0, endTimestamp: 10.0};
         const regions: IRegion[] = [];
-        regions.push({id:"weichih", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
-        regions.push({id:"kualu", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
-        regions.push({id:"liang", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
+        regions.push({id:"weichih", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 886, top: 273, width: 200, height: 800}});
         await this.track(videoClip, regions);
         return;
     }
 
     private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
         const requestHeader = this.createRequestConfigForTracking();
+        console.log("sending tracking request")
         const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
         console.log(response.data);
         const result: TimestampRegionPair[] = [];

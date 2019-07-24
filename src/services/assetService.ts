@@ -142,7 +142,9 @@ export class AssetService {
      * @param fileName - name of asset
      */
     public async registerVideoAsset(asset: IAsset) {
+        console.log("================= Start register video asset =================");
         const blob = await HtmlFileReader.getAssetBlob(asset);
+        console.log("================= Got Asset Blob =================");
         const requestHeader = {
             headers: {
                 "AssetId": asset.id,
@@ -151,6 +153,7 @@ export class AssetService {
             },
         };
         const response = await axios.post("http://localhost:5000/video", blob, requestHeader)
+        console.log("================= Done register video asset =================");
         return "Done";
     }
 
