@@ -27,12 +27,17 @@ def average_tracker_with_det(tracked_boxes, det_boxes, iou_thre=0.3, conf_thre=0
     iou_list = calculate_bbox_ious(tracked_boxes, det_boxes)
 
     mean_tracked_box = []
+    max_ious = []
     for t_idx, t_box in enumerate(tracked_boxes):
-        target_d_boxes = np.array([t_box])
-        for d_idx, d_box_iou in enumerate(iou_list[t_idx]):
+        target_d_boxes = np.array(np.zeros((0, 4)))
+        t_ious = iou_list[t_idx]
+        for d_idx, d_box_iou in enumerate(t_ious):
             if d_box_iou > iou_thre:
                 target_d_boxes = np.vstack((target_d_boxes, det_boxes[d_idx][:4]))
-        mean_tracked_box.append(np.mean(target_d_boxes, axis=0))
-
-    return mean_tracked_box
+        if target_d_boxes.shape[0] == 0:
+            mean_tracked_box.append(t_box)
+        else:
+            mean_tracked_box.append(np.mean(target_d_boxes, axis=0))
+        max_ious.append(max(iou_list[t_idx]))
+    return mean_tracked_box, max_ious
 
