@@ -427,19 +427,19 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
      private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
         const requestHeader = this.createRequestConfigForTracking();
-        //const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
-        //console.log(response.data);
+        const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
+        console.log(response.data);
         const result: TimestampRegionPair[] = [];
-        const fpsmore = 1/15;
-        const regions: IRegion[] = [];
-        regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
-        regions.push({id:"kualu", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
-        regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
-        let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
-        result.push(pair);
-        //response.data.array.forEach(element => {
-        //    result.push(element.timestamp, element.regions)
-        //});
+        //const fpsmore = 1/15;
+        //const regions: IRegion[] = [];
+        //regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+        //regions.push({id:"kualu", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
+        //regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
+        //let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
+        //result.push(pair);
+        response.data.array.forEach(element => {
+            result.push(element.timestamp, element.regions)
+        });
         return result;
     }
 
