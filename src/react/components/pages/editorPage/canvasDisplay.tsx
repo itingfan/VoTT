@@ -1,7 +1,6 @@
 import { Fragment } from "react";
 import React from "react";
 import { connect } from "react-redux";
-import HtmlFileReader from "../../../../common/htmlFileReader";
 import IProjectActions, * as projectActions from "../../../../redux/actions/projectActions";
 import { bindActionCreators } from "redux";
 import {
@@ -22,8 +21,9 @@ import {
     IBoundingBox,
     IPoint
 } from "../../../../models/applicationState";
-import { ContentSource } from "../../common/assetPreview/assetPreview";
-import { createContentBoundingBox } from "../../../../common/layout";
+import CanvasHelpers from "./canvasHelpers";
+import { Editor } from "vott-ct/lib/js/CanvasTools/CanvasTools.Editor";
+import { CanvasTools } from "vott-ct";
 
 export interface ICanvasDisplayProps extends React.Props<CanvasDisplay> {
     selectedAsset?: IAssetMetadata;
@@ -71,6 +71,9 @@ export default class CanvasDisplay extends React.Component<
     private editorDisplayZone: React.RefObject<
         HTMLDivElement
     > = React.createRef();
+    public editor: Editor;
+
+
 
     state = {
         currentMetadata: null,
@@ -81,13 +84,6 @@ export default class CanvasDisplay extends React.Component<
     };
 
     public componentDidMount = () => {
-        var canvas = document.getElementById(
-            "canvasDisplay"
-        ) as HTMLCanvasElement;
-        var ctx = canvas.getContext("2d");
-        // ctx.rect(20, 20, 150, 100);
-        // ctx.stroke();
-
         if (this.props.assets) {
             const size = this.props.assets[0].size
                 ? this.props.assets[0].size
@@ -96,12 +92,16 @@ export default class CanvasDisplay extends React.Component<
             console.log("size:", size);
         }
 
-        const refConvas = document.getElementById(
-            "ct-zone"
-        ) as HTMLCanvasElement;
-        const styles = window.getComputedStyle(refConvas);
-        const width = styles.width;
-        console.log("width", width);
+        // const sz = document.getElementById("editor-displayzone") as HTMLDivElement;
+        // this.editor = new CanvasTools.Editor(sz);
+        // this.editor.autoResize = false;
+
+
+        // this.editor.onSelectionEnd = this.onSelectionEnd;
+        // this.editor.onRegionMoveEnd = this.onRegionMoveEnd;
+        // this.editor.onRegionDelete = this.onRegionDelete;
+        // this.editor.onRegionSelected = this.onRegionSelected;
+        // this.editor.AS.setSelectionMode({ mode: this.props.selectionMode });
     };
 
     public componentWillUnmount() {}
@@ -110,6 +110,13 @@ export default class CanvasDisplay extends React.Component<
         prevProps: Readonly<ICanvasDisplayProps>,
         prevState: Readonly<ICanvasDisplayState>
     ) => {
+
+        // const canvasBuiltin = this.editorDisplayZone.current.querySelector("canvas");
+        // if(canvasBuiltin) {
+        //     canvasBuiltin.setAttribute("id", "canvasDisplay");
+        // }
+
+
         console.log("canvas time", this.props.currentTime);
         console.log("current Metadata", this.state.currentMetadata);
 
@@ -124,6 +131,12 @@ export default class CanvasDisplay extends React.Component<
             canvas.style.left = canvasStyle.left;
             canvas.style.width = canvasStyle.width;
             canvas.style.height = canvasStyle.height;
+
+
+            // const width = canvasStyle.width;
+            // const height = canvasStyle.height;
+
+            // this.editor.resize(+width.substring(0, width.length - 2), +height.substring(0, height.length - 2));
         }
 
         const refDiv = document.getElementById("editor-zone") as HTMLDivElement;
@@ -136,9 +149,6 @@ export default class CanvasDisplay extends React.Component<
             div.style.width = divStyle.width;
             div.style.height = divStyle.height;
             div.style.padding = divStyle.padding;
-
-            // div.style.width = `${refDiv.offsetWidth}px`;
-            // div.style.height = `${refDiv.offsetHeight}px`;
         }
 
         const currentTime = this.props.currentTime;
@@ -153,7 +163,7 @@ export default class CanvasDisplay extends React.Component<
 
             if (
                 currentTime > this.state.nextTime ||
-                this.state.nextTime === 0
+                this.state.nextTime === 0 || this.state.nextTime !== nextTime
             ) {
                 const assetMetadata = await this.props.actions.loadAssetMetadata(
                     this.props.project,
@@ -173,20 +183,56 @@ export default class CanvasDisplay extends React.Component<
                 "canvasDisplay"
             ) as HTMLCanvasElement;
             var ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, this.state.size.width, this.state.size.height);
+            var w = canvas.width;
+            canvas.width = 1;
+            canvas.width = w;
+
             const regions: IRegion[] = this.state.currentMetadata.regions;
+
+
+            // this.state.currentMetadata.regions.forEach((region: IRegion) => {
+            //     const loadedRegionData = CanvasHelpers.getRegionData(region);
+            //     this.editor.RM.addRegion(
+            //         region.id,
+            //         this.editor.scaleRegionToFrameSize(
+            //             loadedRegionData,
+            //             this.state.currentMetadata.asset.size.width,
+            //             this.state.currentMetadata.asset.size.height,
+            //         ),
+            //         CanvasHelpers.getTagsDescriptor(this.props.project.tags, region));
+            // });
+
+
+
+
             for (let i = 0; i < regions.length; i++) {
                 const boundingBox: IBoundingBox = regions[i].boundingBox;
                 const points: IPoint[] = regions[i].points;
+                const tag = CanvasHelpers.getTagsDescriptor(this.props.project.tags, regions[i]);
+                const color = tag.primary.color;
 
-                ctx.fillStyle = "#FF0000";
-                // ctx.fillRect(20, 20, 150, 100);
-
+                ctx.globalAlpha = 1;
+                ctx.strokeStyle  = color;
+                ctx.lineWidth = 5;
                 ctx.rect(
                     boundingBox.left,
                     boundingBox.top,
                     boundingBox.width,
                     boundingBox.height
                 );
+                ctx.stroke();
+
+
+                ctx.globalAlpha = 0.25;
+                ctx.fillStyle  = color;
+                ctx.fillRect(
+                    boundingBox.left,
+                    boundingBox.top,
+                    boundingBox.width,
+                    boundingBox.height)
+                ; 
+
                 ctx.stroke();
             }
         }
