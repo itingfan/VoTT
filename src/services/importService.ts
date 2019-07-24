@@ -65,6 +65,7 @@ export default class ImportService implements IImportService {
             exportFormat: null,
             videoSettings: {
                 frameExtractionRate: originalProject.framerate ? Number(originalProject.framerate) : 15,
+                tracking: false,
             },
             activeLearningSettings: null,
             autoSave: true,
@@ -101,7 +102,7 @@ export default class ImportService implements IImportService {
 
         return generatedAssetMetadata;
     }
-
+    
     /**
      * Generate assets for V1 Image Project frames and regions
      * @param v1Project - v1 Project content and file information

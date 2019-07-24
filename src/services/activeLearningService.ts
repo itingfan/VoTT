@@ -72,9 +72,16 @@ export class ActiveLearningService {
         this.modelLoaded = true;
     }
 
+    public async track(): Promise<void> {
+    }
+
     private async loadModel() {
         let modelPath = "";
-        if (this.settings.modelPathType === ModelPathType.Coco) {
+        
+        if (this.settings.modelPathType == ModelPathType.Cvs) {
+            this.objectDetection.configCustomVisionPrediction(this.settings.cvsApiKey, 
+                this.settings.cvsRegions, this.settings.cvsProjectId, this.settings.cvsPublishedModelName);
+        } else if (this.settings.modelPathType === ModelPathType.Coco) {
             if (isElectron()) {
                 const appPath = this.getAppPath();
 
@@ -90,11 +97,13 @@ export class ActiveLearningService {
             if (isElectron()) {
                 modelPath = this.settings.modelPath;
             }
-        } else {
+        } else if (this.settings.modelPathType == ModelPathType.Url) {
             modelPath = this.settings.modelUrl;
         }
-
-        await this.objectDetection.load(modelPath);
+        
+        if (modelPath.length > 0) {
+            await this.objectDetection.load(modelPath);
+        }
     }
 
     private getAppPath = () => {

@@ -2,6 +2,7 @@ import MD5 from "md5.js";
 import _ from "lodash";
 import * as shortid from "shortid";
 import Guard from "../common/guard";
+import axios from "axios";
 import {
     IAsset, AssetType, IProject, IAssetMetadata, AssetState,
     IRegion, RegionType, ITFRecordMetadata,
@@ -14,6 +15,7 @@ import { TFRecordsReader } from "../providers/export/tensorFlowRecords/tensorFlo
 import { FeatureType } from "../providers/export/tensorFlowRecords/tensorFlowBuilder";
 import { appInfo } from "../common/appInfo";
 import { encodeFileURI } from "../common/utils";
+const fs = require('fs');
 
 /**
  * @name - Asset Service
@@ -135,6 +137,27 @@ export class AssetService {
     }
 
     /**
+     * Register video asset
+     * @param filePath - filepath of asset
+     * @param fileName - name of asset
+     */
+    public async registerVideoAsset(asset: IAsset) {
+        console.log("================= Start register video asset =================");
+        const blob = await HtmlFileReader.getAssetBlob(asset);
+        console.log("================= Got Asset Blob =================");
+        const requestHeader = {
+            headers: {
+                "AssetId": asset.id,
+                "AssetType": blob.type,
+                "Content-Type": "application/octect-stream",
+            },
+        };
+        const response = await axios.post("http://localhost:5000/video", blob, requestHeader)
+        console.log("================= Done register video asset =================");
+        return "Done";
+    }
+
+    /**
      * Get a list of child assets associated with the current asset
      * @param rootAsset The parent asset to search
      */
@@ -155,14 +178,14 @@ export class AssetService {
      * Save metadata for asset
      * @param metadata - Metadata for asset
      */
-    public async save(metadata: IAssetMetadata): Promise<IAssetMetadata> {
+    public async save(metadata: IAssetMetadata, force: boolean = false): Promise<IAssetMetadata> {
         Guard.null(metadata);
 
         const fileName = `${metadata.asset.id}${constants.assetMetadataFileExtension}`;
 
         // Only save asset metadata if asset is in a tagged state
         // Otherwise primary asset information is already persisted in the project file.
-        if (metadata.asset.state === AssetState.Tagged) {
+        if (metadata.asset.state === AssetState.Tagged || force) {
             await this.storageProvider.writeText(fileName, JSON.stringify(metadata, null, 4));
         } else {
             // If the asset is no longer tagged, then it doesn't contain any regions

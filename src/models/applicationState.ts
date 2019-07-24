@@ -51,6 +51,7 @@ export enum ErrorCode {
     PasteRegionTooBig = "pasteRegionTooBig",
     OverloadedKeyBinding = "overloadedKeyBinding",
     ActiveLearningPredictionError = "activeLearningPredictionError",
+    TrackerCreateAssetError = "trackerCreateAssetError"
 }
 
 /**
@@ -199,6 +200,7 @@ export interface IExportFormat {
  */
 export interface IProjectVideoSettings {
     frameExtractionRate: number;
+    tracking: boolean;
 }
 
 /**
@@ -212,6 +214,7 @@ export enum ModelPathType {
     Coco = "coco",
     File = "file",
     Url = "url",
+    Cvs = "cvs",
 }
 
 /**
@@ -235,6 +238,11 @@ export interface IActiveLearningSettings {
     modelPathType: ModelPathType;
     modelPath?: string;
     modelUrl?: string;
+    cvsApiKey? : string;
+    cvsRegions? : string;
+    cvsProjectId? : string;
+    cvsPublishedModelName? : string;
+    cvsPredictionUrl? : string;
     autoDetect: boolean;
     predictTag: boolean;
 }
@@ -327,6 +335,30 @@ export interface IBoundingBox {
     top: number;
     width: number;
     height: number;
+}
+
+/**
+ * @name - VideoClip
+ * @description - Defines the video clip to be processed by object tracking module
+ * @member id - The id of the source video
+ * @member startTimestamp - The start timestamp of the clip
+ * @member endTimestamp - The end timestamp of the clip
+ */
+export interface VideoClip {
+    id: string;
+    startTimestamp: number;
+    endTimestamp: number;
+}
+
+/**
+ * @name - TimestampRegionPair
+ * @description - Defines the paired object of a timestamp with its object tracking result
+ * @member timestamp - The timestamp
+ * @member regions - The object tracking result of that timestamp
+ */
+export interface TimestampRegionPair {
+    timestamp: number;
+    regions: IRegion[];
 }
 
 /**

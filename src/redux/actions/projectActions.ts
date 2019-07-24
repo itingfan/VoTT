@@ -10,6 +10,7 @@ import {
     IAsset,
     IAssetMetadata,
     IProject,
+    AssetType,
 } from "../../models/applicationState";
 import { createAction, createPayloadAction, IPayloadAction } from "./actionCreators";
 import { ExportAssetState, IExportResults } from "../../providers/export/exportProvider";
@@ -29,7 +30,7 @@ export default interface IProjectActions {
     exportProject(project: IProject): Promise<void> | Promise<IExportResults>;
     loadAssets(project: IProject): Promise<IAsset[]>;
     loadAssetMetadata(project: IProject, asset: IAsset): Promise<IAssetMetadata>;
-    saveAssetMetadata(project: IProject, assetMetadata: IAssetMetadata): Promise<IAssetMetadata>;
+    saveAssetMetadata(project: IProject, assetMetadata: IAssetMetadata, force?: boolean): Promise<IAssetMetadata>;
     updateProjectTag(project: IProject, oldTagName: string, newTagName: string): Promise<IAssetMetadata[]>;
     deleteProjectTag(project: IProject, tagName): Promise<IAssetMetadata[]>;
 }
@@ -132,6 +133,11 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
     return async (dispatch: Dispatch) => {
         const assetService = new AssetService(project);
         const assets = await assetService.getAssets();
+        await assets.forEachAsync(async (asset) => {
+            if (project.videoSettings.tracking && asset.type == AssetType.Video) {
+                //await assetService.registerVideoAsset(asset)    
+            }
+        });
         dispatch(loadProjectAssetsAction(assets));
 
         return assets;
@@ -160,12 +166,13 @@ export function loadAssetMetadata(project: IProject, asset: IAsset): (dispatch: 
  */
 export function saveAssetMetadata(
     project: IProject,
-    assetMetadata: IAssetMetadata): (dispatch: Dispatch) => Promise<IAssetMetadata> {
+    assetMetadata: IAssetMetadata,
+    force: boolean = false): (dispatch: Dispatch) => Promise<IAssetMetadata> {
     const newAssetMetadata = { ...assetMetadata, version: appInfo.version };
 
     return async (dispatch: Dispatch) => {
         const assetService = new AssetService(project);
-        const savedMetadata = await assetService.save(newAssetMetadata);
+        const savedMetadata = await assetService.save(newAssetMetadata, force);
         dispatch(saveAssetMetadataAction(savedMetadata));
 
         return { ...savedMetadata };

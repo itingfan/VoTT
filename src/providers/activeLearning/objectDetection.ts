@@ -1,8 +1,8 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import * as shortid from "shortid";
 import * as tf from "@tensorflow/tfjs";
 import { ElectronProxyHandler } from "./electronProxyHandler";
-import { IRegion, RegionType } from "../../models/applicationState";
+import { IRegion, RegionType, VideoClip, TimestampRegionPair } from "../../models/applicationState";
 import { strings } from "../../common/strings";
 
 // tslint:disable-next-line:interface-over-type-literal
@@ -29,6 +29,9 @@ export class ObjectDetection {
 
     private model: tf.GraphModel;
     private jsonClasses: JSON;
+    private cvsPredictionUrl: string;
+    private cvsRequestHeader: AxiosRequestConfig;
+    private flaskRequestHeader: AxiosRequestConfig;
 
     /**
      * Dispose the tensors allocated by the model. You should call this when you
@@ -69,6 +72,21 @@ export class ObjectDetection {
         }
     }
 
+    public async configCustomVisionPrediction(apiKey: string, region: string, projectId: string, modelName: string) {
+        this.cvsPredictionUrl = `https://${region}.api.cognitive.microsoft.com/customvision/v3.0/Prediction/${projectId}/detect/iterations/${modelName}/image`
+        this.cvsRequestHeader = this.createRequestConfig(apiKey)
+        this.modelLoaded = true;
+    }
+
+    private createRequestConfig(apiKey: string): AxiosRequestConfig {
+        return {
+            headers: {
+                "Prediction-Key": apiKey,
+                "Content-Type": "application/octet-stream",
+            },
+        };
+    }
+
     /**
      * Predict Regions from an HTMLImageElement returning list of IRegion.
      * @param image ImageObject to be used for prediction
@@ -78,9 +96,12 @@ export class ObjectDetection {
      */
     public async predictImage(image: ImageObject, predictTag: boolean, xRatio: number, yRatio: number)
         : Promise<IRegion[]> {
-        const regions: IRegion[] = [];
 
+        await this.track_stub();
+
+        const regions: IRegion[] = [];
         const predictions = await this.detect(image);
+        
         predictions.forEach((prediction) => {
             const left = Math.max(0, prediction.bbox[0] * xRatio);
             const top = Math.max(0, prediction.bbox[1] * yRatio);
@@ -131,6 +152,10 @@ export class ObjectDetection {
      *
      */
     public async detect(img: ImageObject, maxNumBoxes: number = 20): Promise<DetectedObject[]> {
+        if (this.cvsPredictionUrl && this.cvsPredictionUrl.length > 0) {
+            return this.cvsPredict(img, maxNumBoxes);
+        }
+
         if (this.model) {
             return this.infer(img, maxNumBoxes);
         }
@@ -249,5 +274,64 @@ export class ObjectDetection {
             classes[i] = index;
         }
         return [maxes, classes];
+    }
+
+    private async cvsPredict(img: ImageObject, maxNumBoxes: number = 20): Promise<DetectedObject[]> {
+        const canvas = img as HTMLCanvasElement;
+        const width = canvas.width;
+        const height = canvas.height;
+        const contents = await this.getAssetFrameImage(canvas);
+        const objects: DetectedObject[] = [];
+        const response = await axios.post(this.cvsPredictionUrl, contents, this.cvsRequestHeader);
+        if (response.status == 200 && response.data.predictions.length > 0) {
+            response.data.predictions.forEach((prediction) => {
+                if (prediction.probability > 0.7) {
+                    objects.push({
+                        bbox: [prediction.boundingBox.left*width, prediction.boundingBox.top*height, 
+                            prediction.boundingBox.width*width, prediction.boundingBox.height*height],
+                        class: prediction.tagName,
+                        score: prediction.probability
+                    })
+                }
+            });
+        }
+        
+
+        return objects;
+    }
+
+    private async track_stub(): Promise<void> {
+        const videoClip: VideoClip = {id: "/app/static/test.mp4", startTimestamp: 0.0, endTimestamp: 10.0};
+        const regions: IRegion[] = [];
+        regions.push({id:"weichih", type: RegionType.Square, tags: [], points: [], boundingBox: {left: 886, top: 273, width: 200, height: 800}});
+        await this.track(videoClip, regions);
+        return;
+    }
+
+    private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
+        const requestHeader = this.createRequestConfigForTracking();
+        console.log("sending tracking request")
+        const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
+        console.log(response.data);
+        const result: TimestampRegionPair[] = [];
+        return result;
+    }
+
+    private createRequestConfigForTracking(): AxiosRequestConfig {
+        return {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        };
+    }
+
+    /**
+     * Convert HTMLCanvasElement to Blob
+     * @param img HTMLCanvasElement
+     */
+    public async getAssetFrameImage(img: HTMLCanvasElement): Promise<Blob> {
+        return new Promise<Blob>((resolve, reject) => {
+            img.toBlob(resolve);
+        });
     }
 }
