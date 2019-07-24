@@ -57,6 +57,11 @@ def track_video(init_regions, video_clip):
         od_bboxes_pth = os.path.join('output',
                                      os.path.splitext(os.path.basename(video_pth))[0],
                                      str(round(sec, 2))+'.p')
+        if not os.path.exists(od_bboxes_pth):
+            sec = sec-(sec % frame_rate)
+            od_bboxes_pth = os.path.join('output',
+                                         os.path.splitext(os.path.basename(video_pth))[0],
+                                         str(round(sec, 2)) + '.p')
         od_bboxes = pickle.load(open(od_bboxes_pth, 'rb'))
 
         track_recs = [(box[1][0], box[1][1], box[1][0] + box[1][2], box[1][1] + box[1][3]) for box in boxes]
@@ -104,7 +109,7 @@ def track_video(init_regions, video_clip):
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
 
-        if sec == video_clip.start_time:
+        if sec - video_clip.start_time < frame_rate:
             list_of_init_box = []
             list_if_init_id = []
 
@@ -130,7 +135,7 @@ def track_video(init_regions, video_clip):
 
 
 if __name__ == '__main__':
-    videoClip = VideoClip(r"C:\Users\tobai\Documents\data\20190722_190943000_iOS.mp4", 2.000000, 10.000000)
+    videoClip = VideoClip(r"C:\Users\tobai\Documents\data\20190722_190943000_iOS.mp4", 2.0400000, 10.000000)
     init_regions = []
     init_regions.append(Region(1,
                               default_type,
