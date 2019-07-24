@@ -20,12 +20,11 @@ def store_video():
     extension = mimetypes.guess_extension(data_type)
     video_file_name = data_id + extension
     video_pth = os.path.join('static', video_file_name)
-    if os.path.exists(video_pth) and os.path.exists(os.path.join('output', video_name)):
+    if os.path.exists(video_pth) and os.path.exists(os.path.join('output', data_id)):
         return 'Done'
 
     with open(video_pth, 'wb') as f:
         f.write(request.data)
-        f.close()
     video_name = os.path.splitext(os.path.basename(video_pth))[0]
     video_od(video_pth, os.path.join('output', video_name))
     return 'Done'
@@ -44,4 +43,4 @@ def track():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=int('5000'))

@@ -35,7 +35,8 @@ def video_od(video_pth, out_dir):
             break
         frame = imutils.resize(frame, width=FRAME_WIDE)
         od_bboxes = object_detector("detect-body.onnx").detect(frame)
-        pickle.dump(od_bboxes, open(os.path.join(out_dir, str(round(sec, 2))+'.p'), 'wb'))
+        with open(os.path.join(out_dir, str(round(sec, 2))+'.p'), 'wb') as f:
+            pickle.dump(od_bboxes, f)
         sec += frame_rate
 
 

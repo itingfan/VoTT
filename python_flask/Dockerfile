@@ -5,5 +5,4 @@ RUN apt-get install -y python3-pip python-dev build-essential libsm6 libxext6 li
 COPY . /app
 WORKDIR /app
 RUN pip3 install -r requirements.txt
-ENTRYPOINT ["python3"]
-CMD ["app.py"]
+CMD ["gunicorn"  , "-b", "0.0.0.0:5000", "--workers", "3", "--timeout", "600", "app:app"]
