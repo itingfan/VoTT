@@ -4,6 +4,7 @@ import os
 from flask import jsonify
 from utils import *
 import logging
+import mimetypes
 from video_object_detection import video_od
 from multi_object_tracking import track_video
 app = Flask(__name__)
@@ -14,12 +15,16 @@ def hello_world():
 
 @app.route('/video', methods=['POST'])
 def store_video():
-    video = request.files["video"]
-    video_pth = "static/test.mp4"
-    video.save(video_pth)
+    data_type = request.headers.get('AssetType')
+    data_id = request.headers.get('AssetId')
+    extension = mimetypes.guess_extension(data_type)
+    video_file_name = data_id + extension
+    video_pth = os.path.join('static', video_file_name)
+    with open(video_pth, 'wb') as f:
+        f.write(request.data)
+        f.close()
     video_name = os.path.splitext(os.path.basename(video_pth))[0]
     video_od(video_pth, os.path.join('output', video_name))
-
     return 'Done'
 
 @app.route('/track', methods=['POST'])

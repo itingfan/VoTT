@@ -133,9 +133,9 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
     return async (dispatch: Dispatch) => {
         const assetService = new AssetService(project);
         const assets = await assetService.getAssets();
-        assets.forEach(async (asset) => {
-            if (asset.type == AssetType.Video || asset.type == AssetType.VideoFrame) {
-                await assetService.registerVideoAsset(asset.path, asset.name)    
+        await assets.forEachAsync(async (asset) => {
+            if (asset.type == AssetType.Video) {
+                await assetService.registerVideoAsset(asset)    
             }
         });
         dispatch(loadProjectAssetsAction(assets));
