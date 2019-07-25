@@ -21,8 +21,8 @@ def track_video(init_regions, video_clip, app):
 
     app.logger.info("started tracking video {}")
     dic_idx_to_id = {i_idx : i_init.id for i_idx, i_init in enumerate(init_regions)}
-    video_pth = video_clip.id
-
+    video_pth = os.path.join("static", video_clip.id)
+    app.logger.info("Video path is {0}".format(video_pth))
     app.logger.info("creating tracker")
     # initialize OpenCV's special multi-object tracker
     try:
