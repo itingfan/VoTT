@@ -40,7 +40,7 @@ def video_od(video_pth, out_dir):
         frame = imutils.resize(frame, width=FRAME_WIDE)
 
         od_bboxes = detector.detect(frame)
-        with open(os.path.join(out_dir, str(round(sec, 2))+'.p'), 'wb') as f:
+        with open(os.path.join(out_dir, '%.2f' % sec +'.p'), 'wb') as f:
             pickle.dump(od_bboxes, f)
         sec += frame_rate
     end_time = time.time()

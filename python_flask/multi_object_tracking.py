@@ -21,8 +21,8 @@ def track_video(init_regions, video_clip, app):
 
     app.logger.info("started tracking video {}")
     dic_idx_to_id = {i_idx : i_init.id for i_idx, i_init in enumerate(init_regions)}
-    video_pth = video_clip.id
-
+    video_pth = os.path.join("static", video_clip.id)
+    app.logger.info("Video path is {0}".format(video_pth))
     app.logger.info("creating tracker")
     # initialize OpenCV's special multi-object tracker
     try:
@@ -66,13 +66,13 @@ def track_video(init_regions, video_clip, app):
 
         od_bboxes_pth = os.path.join('output',
                                      os.path.splitext(os.path.basename(video_pth))[0],
-                                     str(round(sec, 2))+'.p')
+                                     '%.2f' % sec +'.p')
         app.logger.info("od bbox path: {}".format(od_bboxes_pth))
         if not os.path.exists(od_bboxes_pth):
             sec = sec-(sec % frame_rate)
             od_bboxes_pth = os.path.join('output',
                                          os.path.splitext(os.path.basename(video_pth))[0],
-                                         str(round(sec, 2)) + '.p')
+                                         '%.2f' % sec + '.p')
         od_bboxes = pickle.load(open(od_bboxes_pth, 'rb'))
         app.logger.info("od_bboxes loaded")
 

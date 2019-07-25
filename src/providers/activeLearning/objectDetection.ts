@@ -96,9 +96,7 @@ export class ObjectDetection {
      */
     public async predictImage(image: ImageObject, predictTag: boolean, xRatio: number, yRatio: number)
         : Promise<IRegion[]> {
-
-        await this.track_stub();
-
+            
         const regions: IRegion[] = [];
         const predictions = await this.detect(image);
         

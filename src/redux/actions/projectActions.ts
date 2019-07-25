@@ -135,7 +135,7 @@ export function loadAssets(project: IProject): (dispatch: Dispatch) => Promise<I
         const assets = await assetService.getAssets();
         await assets.forEachAsync(async (asset) => {
             if (project.videoSettings.tracking && asset.type == AssetType.Video) {
-                //await assetService.registerVideoAsset(asset)    
+                await assetService.registerVideoAsset(asset)    
             }
         });
         dispatch(loadProjectAssetsAction(assets));

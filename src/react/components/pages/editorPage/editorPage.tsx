@@ -532,7 +532,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
 
-                const videoClip: VideoClip = {id: "/app/static/test.mp4", 
+                const videoClip: VideoClip = {id: [assetMetadata.asset.parent.id, assetMetadata.asset.parent.format].join("."), 
+
                                             startTimestamp: assetMetadata.asset.timestamp, 
                                             endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
