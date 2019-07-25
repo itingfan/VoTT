@@ -451,9 +451,14 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         //regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
         //let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
         //result.push(pair);
-        if(response && response.data && response.data.array) {
-            response.data.array.forEach(element => {
-                result.push(element.timestamp, element.regions)
+        if(response && response.data) {
+            response.data.forEach(element => {
+                if (element.regions)
+                {
+                    console.log(element);
+                    let pair: TimestampRegionPair = {timestamp: element.timestamp, regions: element.regions};
+                    result.push(pair);
+                }
             });
         }
 
@@ -481,7 +486,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
      */
     private onAssetMetadataChanged = async (assetMetadata: IAssetMetadata): Promise<void> => {
         // If the asset contains any regions without tags, don't proceed.
-        const regionsWithoutTags = assetMetadata.regions.filter((region) => region.tags.length === 0);
+        const regionsWithoutTags = assetMetadata.regions.filter((region) => region.tags && region.tags.length === 0);
 
         if (regionsWithoutTags.length > 0) {
             this.setState({ isValid: false });
@@ -530,7 +535,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
 
-                const videoClip: VideoClip = {id: [assetMetadata.asset.parent.id, assetMetadata.asset.format].join("."), 
+                const videoClip: VideoClip = {id: "/app/static/test.mp4", 
                                             startTimestamp: assetMetadata.asset.timestamp, 
                                             endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
@@ -543,18 +548,26 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 // 4. create/update assetMetadata
                 responses.forEach((response) => {
                     // create assetMetadata  
-                    const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
-                    let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
-                    assetMetadataToAdd.then((metadata) => {
-                        metadata.regions = response.regions;
-                        const pair = _.keyBy(predictedAsset, predictedAsset.id);
-                        var newProject = {...this.props.project, predictedAsset}; 
-                        // Save to .Vott file
-                        this.props.actions.saveProject(newProject);
+                    if (response && response.regions && response.regions.length !== 0)
+                    {
+                        const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
+                        let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
+                        assetMetadataToAdd.then((metadata) => {
+                            console.log("Meta Data Region: Before", metadata.regions);
+                            metadata.regions = response.regions;
+                            metadata.regions.forEach((region) => {
+                                region.tags = ["Person"];
+                            })
 
-                        // Save a Asset.json file
-                        this.props.actions.saveAssetMetadata(this.props.project, metadata, true);
-                    });
+                            console.log("Meta Data Region: After", metadata.regions);
+                            var newProject = {...this.props.project, predictedAsset}; 
+                            // Save to .Vott file
+                            this.props.actions.saveProject(newProject);
+
+                            // Save a Asset.json file
+                            this.props.actions.saveAssetMetadata(this.props.project, metadata, true);
+                        });
+                    }
                 });
             }
         }
