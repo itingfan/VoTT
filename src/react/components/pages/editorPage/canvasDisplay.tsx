@@ -89,7 +89,6 @@ export default class CanvasDisplay extends React.Component<
                 ? this.props.assets[0].size
                 : this.state.size;
             this.setState({ size: size });
-            console.log("size:", size);
         }
 
         // const sz = document.getElementById("editor-displayzone") as HTMLDivElement;
@@ -117,8 +116,6 @@ export default class CanvasDisplay extends React.Component<
         // }
 
 
-        console.log("canvas time", this.props.currentTime);
-        console.log("current Metadata", this.state.currentMetadata);
 
         const refConvas = document.getElementById(
             "ct-zone"
@@ -154,12 +151,10 @@ export default class CanvasDisplay extends React.Component<
         const currentTime = this.props.currentTime;
         const nextFrame = this.props.childAssets.find(
             asset =>
-                asset.state === AssetState.Tagged &&
                 asset.timestamp > currentTime
         );
         if (nextFrame) {
             const nextTime = nextFrame.timestamp;
-            console.log("nextFrame Time:", nextTime);
 
             if (
                 currentTime > this.state.nextTime ||
@@ -173,12 +168,10 @@ export default class CanvasDisplay extends React.Component<
                     currentMetadata: assetMetadata,
                     nextTime: nextTime
                 });
-                console.log("nextFrame Metadata:", assetMetadata);
             }
         }
 
         if (this.state.currentMetadata) {
-            console.log("currentMetadata", this.state.currentMetadata);
             const canvas = document.getElementById(
                 "canvasDisplay"
             ) as HTMLCanvasElement;

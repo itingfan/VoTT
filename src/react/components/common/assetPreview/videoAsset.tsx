@@ -228,7 +228,6 @@ export class VideoAsset extends React.Component<IVideoAssetProps> {
 
     private onVideoStateChange = (state: Readonly<IVideoPlayerState>, prev: Readonly<IVideoPlayerState>) => {
         const currentTime = this.getVideoPlayerState().currentTime;
-        console.log("video time:", currentTime);
         this.props.onTimeChanged(currentTime)
         if (!this.state.loaded && state.readyState === 4 && state.readyState !== prev.readyState) {
             // Video initial load complete

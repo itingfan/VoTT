@@ -288,7 +288,6 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
 
     private onTimeChanged = (time: number) => {
         this.setState({currentTime: time});
-        console.log("callBack:", this.state.currentTime);
         // if(Math.abs(time - this.state.currentTime) >= 0.5 && Math.abs(time - this.state.currentTime) <= 1)
         //     this.setState({currentTime: time});
     }
@@ -442,7 +441,6 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
      private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
         const requestHeader = this.createRequestConfigForTracking();
         const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
-        console.log(response.data);
         const result: TimestampRegionPair[] = [];
         //const fpsmore = 1/15;
         //const regions: IRegion[] = [];
@@ -455,7 +453,6 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             response.data.forEach(element => {
                 if (element.regions)
                 {
-                    console.log(element);
                     let pair: TimestampRegionPair = {timestamp: element.timestamp, regions: element.regions};
                     result.push(pair);
                 }
@@ -540,32 +537,38 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                             endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
-                console.log("==================== Started tracking ======================");
                 const responses = await this.track(videoClip, regions);
-                console.log("==================== Ended tracking ======================");
-                console.log(responses);
 
                 // 4. create/update assetMetadata
+                let currentProject = this.props.project;
                 responses.forEach((response) => {
                     // create assetMetadata  
                     if (response && response.regions && response.regions.length !== 0)
                     {
                         const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
                         let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
-                        assetMetadataToAdd.then((metadata) => {
-                            console.log("Meta Data Region: Before", metadata.regions);
+                        assetMetadataToAdd.then(async (metadata) => {
+                            metadata.asset.state = AssetState.Tagged;
                             metadata.regions = response.regions;
                             metadata.regions.forEach((region) => {
                                 region.tags = ["Person"];
+                                const points = [];
+                                points.push({x: region.boundingBox.left, y: region.boundingBox.top});
+                                points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});
+                                points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top + region.boundingBox.height});
+                                points.push({x: region.boundingBox.left, y: region.boundingBox.top + region.boundingBox.height});
+                                region.points = points;
                             })
 
-                            console.log("Meta Data Region: After", metadata.regions);
-                            var newProject = {...this.props.project, predictedAsset}; 
+                            var newProject = {...currentProject}; 
+                            var newAsset = {[predictedAsset.id]: predictedAsset};
+                            newProject.assets = {...newProject.assets, ...newAsset};
+                            currentProject = newProject;
                             // Save to .Vott file
-                            this.props.actions.saveProject(newProject);
+                            await this.props.actions.saveProject(currentProject);
 
                             // Save a Asset.json file
-                            this.props.actions.saveAssetMetadata(this.props.project, metadata, true);
+                            await this.props.actions.saveAssetMetadata(currentProject, metadata, true);
                         });
                     }
                 });
