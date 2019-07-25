@@ -552,7 +552,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                             metadata.asset.state = AssetState.Tagged;
                             metadata.regions = response.regions;
                             metadata.regions.forEach((region) => {
-                                region.tags = ["Person"];
+                                
+                                region.tags = [region.tags[0]];
                                 const points = [];
                                 points.push({x: region.boundingBox.left, y: region.boundingBox.top});
                                 points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});
