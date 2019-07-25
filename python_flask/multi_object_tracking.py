@@ -66,13 +66,13 @@ def track_video(init_regions, video_clip, app):
 
         od_bboxes_pth = os.path.join('output',
                                      os.path.splitext(os.path.basename(video_pth))[0],
-                                     str(round(sec, 2))+'.p')
+                                     '%.2f' % sec +'.p')
         app.logger.info("od bbox path: {}".format(od_bboxes_pth))
         if not os.path.exists(od_bboxes_pth):
             sec = sec-(sec % frame_rate)
             od_bboxes_pth = os.path.join('output',
                                          os.path.splitext(os.path.basename(video_pth))[0],
-                                         str(round(sec, 2)) + '.p')
+                                         '%.2f' % sec + '.p')
         od_bboxes = pickle.load(open(od_bboxes_pth, 'rb'))
         app.logger.info("od_bboxes loaded")
 
