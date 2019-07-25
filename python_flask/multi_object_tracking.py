@@ -17,17 +17,25 @@ cv2_visual = False
 default_type, default_tag, default_points = 2, None, None
 
 
-def track_video(init_regions, video_clip):
+def track_video(init_regions, video_clip, app):
 
+    app.logger.info("started tracking video {}")
     dic_idx_to_id = {i_idx : i_init.id for i_idx, i_init in enumerate(init_regions)}
-    video_pth = video_clip.id
-
+    video_pth = os.path.join("static", video_clip.id)
+    app.logger.info("Video path is {0}".format(video_pth))
+    app.logger.info("creating tracker")
     # initialize OpenCV's special multi-object tracker
-    trackers = MultiTracker()
+    try:
+        trackers = MultiTracker()
+    except Exception as exp:
+        app.logger.info(exp)
+        raise
 
+    app.logger.info("video loading")
     vs = cv2.VideoCapture(video_pth)
+    app.logger.info("video loaded")
     fps = 15
-    print("fps: {}".format(fps))
+    app.logger.info("fps: {}".format(fps))
 
     # loop over frames from the video stream
     sec = video_clip.start_time
@@ -39,8 +47,10 @@ def track_video(init_regions, video_clip):
         # VideoStream or VideoCapture object
         vs.set(cv2.CAP_PROP_POS_MSEC, sec * 1000)
 
+        app.logger.info("frame loading")
         frame = vs.read()
         frame = frame[1]
+        app.logger.info("frame loaded")
 
         # check to see if we have reached the end of the stream
         if frame is None:
@@ -56,13 +66,15 @@ def track_video(init_regions, video_clip):
 
         od_bboxes_pth = os.path.join('output',
                                      os.path.splitext(os.path.basename(video_pth))[0],
-                                     str(round(sec, 2))+'.p')
+                                     '%.2f' % sec +'.p')
+        app.logger.info("od bbox path: {}".format(od_bboxes_pth))
         if not os.path.exists(od_bboxes_pth):
             sec = sec-(sec % frame_rate)
             od_bboxes_pth = os.path.join('output',
                                          os.path.splitext(os.path.basename(video_pth))[0],
                                          '%.2f' % sec + '.p')
         od_bboxes = pickle.load(open(od_bboxes_pth, 'rb'))
+        app.logger.info("od_bboxes loaded")
 
         track_recs = [(box[1][0], box[1][1], box[1][0] + box[1][2], box[1][1] + box[1][3]) for box in boxes]
         track_ids = [box[0] for box in boxes]
@@ -80,8 +92,10 @@ def track_video(init_regions, video_clip):
                                       default_points,
                                       bbox))
 
+        app.logger.info("od_bboxes loaded")
+
         # time stamp with the bbox map back to the original resolution
-        TimestampRegionsPair_list.append(TimestampRegionsPair(round(sec, 6), region_list))
+        TimestampRegionsPair_list.append(TimestampRegionsPair(round(sec, 6), region_list).to_dict())
 
         # re-init tracker
         if sec % 1 < 1e-3:

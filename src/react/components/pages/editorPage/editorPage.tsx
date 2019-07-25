@@ -33,6 +33,7 @@ import { ActiveLearningService } from "../../../../services/activeLearningServic
 import { toast } from "react-toastify";
 import { RegionType, VideoClip, TimestampRegionPair } from "../../../../models/applicationState";
 import axios, { AxiosRequestConfig } from "axios";
+import CanvasDisplay from "./canvasDisplay";
 
 /**
  * Properties for Editor Page
@@ -80,6 +81,8 @@ export interface IEditorPageState {
     isValid: boolean;
     /** Whether the show invalid region warning alert should display */
     showInvalidRegionWarning: boolean;
+
+    currentTime: number;
 }
 
 function mapStateToProps(state: IApplicationState) {
@@ -117,6 +120,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         thumbnailSize: this.props.appSettings.thumbnailSize || { width: 175, height: 155 },
         isValid: true,
         showInvalidRegionWarning: false,
+        currentTime: 0
     };
 
     private activeLearningService: ActiveLearningService = null;
@@ -224,7 +228,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                         editorMode={this.state.editorMode}
                                         selectionMode={this.state.selectionMode}
                                         project={this.props.project}
-                                        lockedTags={this.state.lockedTags}>
+                                        lockedTags={this.state.lockedTags}
+                                        onTimeChanged={this.onTimeChanged}>
                                         <AssetPreview
                                             additionalSettings={this.state.additionalSettings}
                                             autoPlay={true}
@@ -234,6 +239,9 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                                             asset={this.state.selectedAsset.asset}
                                             childAssets={this.state.childAssets} />
                                     </Canvas>
+                                }
+                                {selectedAsset &&
+                                    <CanvasDisplay actions={this.props.actions} assets={this.state.assets} childAssets={this.state.childAssets} project={this.props.project} selectedAsset={this.state.selectedAsset} currentTime={this.state.currentTime}>CanvasDisplay</CanvasDisplay>
                                 }
                             </div>
                         </div>
@@ -278,6 +286,11 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         });
     }
 
+    private onTimeChanged = (time: number) => {
+        this.setState({currentTime: time});
+        // if(Math.abs(time - this.state.currentTime) >= 0.5 && Math.abs(time - this.state.currentTime) <= 1)
+        //     this.setState({currentTime: time});
+    }
     /**
      * Called when the asset side bar is resized
      * @param newWidth The new sidebar width
@@ -428,8 +441,24 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
      private async track(clip: VideoClip, initRegions: IRegion[]): Promise<TimestampRegionPair[]> {
         const requestHeader = this.createRequestConfigForTracking();
         const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
-        console.log(response.data);
         const result: TimestampRegionPair[] = [];
+        //const fpsmore = 1/15;
+        //const regions: IRegion[] = [];
+        //regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+        //regions.push({id:"kualu", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
+        //regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
+        //let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
+        //result.push(pair);
+        if(response && response.data) {
+            response.data.forEach(element => {
+                if (element.regions)
+                {
+                    let pair: TimestampRegionPair = {timestamp: element.timestamp, regions: element.regions};
+                    result.push(pair);
+                }
+            });
+        }
+
         return result;
     }
 
@@ -454,7 +483,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
      */
     private onAssetMetadataChanged = async (assetMetadata: IAssetMetadata): Promise<void> => {
         // If the asset contains any regions without tags, don't proceed.
-        const regionsWithoutTags = assetMetadata.regions.filter((region) => region.tags.length === 0);
+        const regionsWithoutTags = assetMetadata.regions.filter((region) => region.tags && region.tags.length === 0);
 
         if (regionsWithoutTags.length > 0) {
             this.setState({ isValid: false });
@@ -462,6 +491,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         }
 
         const initialState = assetMetadata.asset.state;
+        const assetService = new AssetService(this.props.project);
 
         // The root asset can either be the actual asset being edited (ex: VideoFrame) or the top level / root
         // asset selected from the side bar (image/video).
@@ -493,26 +523,61 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         // Only update asset metadata if state changes or is different
         if (initialState !== assetMetadata.asset.state || this.state.selectedAsset !== assetMetadata) {
 
+            await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
+
             // Pause at next frame will trigger this function. Add this to avoid trigger multiple time
-            if (assetMetadata.regions.length !== 0)
+            if (assetMetadata.regions.length > 0 && this.props.project.videoSettings.tracking)
             {
                 // 1. Get all regions with current update region
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
-                const videoClip: VideoClip = {id: "cvs_team_video", startTimestamp: 0.0, endTimestamp: 10.0};
+
+                const videoClip: VideoClip = {id: [assetMetadata.asset.parent.id, assetMetadata.asset.parent.format].join("."), 
+
+                                            startTimestamp: assetMetadata.asset.timestamp, 
+                                            endTimestamp: 10.0};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
-                // const timeStampRegionsPair = await this.track(videoClip, regions);
-                // TEST: assetMetadata.regions.push({id:"weichih-test2", type: RegionType.Square, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
+                const responses = await this.track(videoClip, regions);
+
                 // 4. create/update assetMetadata
+                let currentProject = this.props.project;
+                responses.forEach((response) => {
+                    // create assetMetadata  
+                    if (response && response.regions && response.regions.length !== 0)
+                    {
+                        const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
+                        let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
+                        assetMetadataToAdd.then(async (metadata) => {
+                            metadata.asset.state = AssetState.Tagged;
+                            metadata.regions = response.regions;
+                            metadata.regions.forEach((region) => {
+                                region.tags = ["Person"];
+                                const points = [];
+                                points.push({x: region.boundingBox.left, y: region.boundingBox.top});
+                                points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});
+                                points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top + region.boundingBox.height});
+                                points.push({x: region.boundingBox.left, y: region.boundingBox.top + region.boundingBox.height});
+                                region.points = points;
+                            })
+
+                            var newProject = {...currentProject}; 
+                            var newAsset = {[predictedAsset.id]: predictedAsset};
+                            newProject.assets = {...newProject.assets, ...newAsset};
+                            currentProject = newProject;
+                            // Save to .Vott file
+                            await this.props.actions.saveProject(currentProject);
+
+                            // Save a Asset.json file
+                            await this.props.actions.saveAssetMetadata(currentProject, metadata, true);
+                        });
+                    }
+                });
             }
-            
-            await this.props.actions.saveAssetMetadata(this.props.project, assetMetadata);
         }
 
         await this.props.actions.saveProject(this.props.project);
 
-        const assetService = new AssetService(this.props.project);
         const childAssets = assetService.getChildAssets(rootAsset);
 
         // Find and update the root asset in the internal state
@@ -527,6 +592,20 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         }
 
         this.setState({ childAssets, assets, isValid: true });
+    }
+
+    /**
+    * Create asset from tracking response
+    */
+    private createAssetFromPrediction = (prediction: TimestampRegionPair, rootAsset: IAsset): IAsset => {
+        let filePath = `${rootAsset.path}#t=${prediction.timestamp}`;
+        const asset = AssetService.createAssetFromFilePath(filePath);
+        asset.state = AssetState.NotVisited;
+        asset.type = AssetType.VideoFrame;
+        asset.parent = rootAsset;
+        asset.timestamp = prediction.timestamp;
+        asset.size = rootAsset.size;
+        return asset;
     }
 
     /**

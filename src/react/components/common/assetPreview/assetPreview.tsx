@@ -41,6 +41,8 @@ export interface IAssetProps {
     onAssetChanged?: (asset: IAsset) => void;
     /** Event handler that fires right before an asset has changed */
     onBeforeAssetChanged?: () => boolean;
+
+    onTimeChanged?:(time: number) => void;
 }
 
 /**
@@ -161,7 +163,8 @@ export class AssetPreview extends React.Component<IAssetPreviewProps, IAssetPrev
                     onBeforeAssetChanged={this.props.onBeforeAssetChanged}
                     onChildAssetSelected={this.onChildAssetSelected}
                     onActivated={this.props.onActivated}
-                    onDeactivated={this.props.onDeactivated} />;
+                    onDeactivated={this.props.onDeactivated}
+                    onTimeChanged={this.props.onTimeChanged} />;
             case AssetType.TFRecord:
                 return <TFRecordAsset asset={asset}
                     onLoaded={this.onAssetLoad}
