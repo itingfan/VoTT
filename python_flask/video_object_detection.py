@@ -39,7 +39,7 @@ def video_od(video_pth, out_dir):
             break
         frame = imutils.resize(frame, width=FRAME_WIDE)
         od_bboxes = detector.detect(frame)
-        pickle.dump(od_bboxes, open(os.path.join(out_dir, str(round(sec, 2))+'.p'), 'wb'))
+        pickle.dump(od_bboxes, open(os.path.join(out_dir, '%.2f' % sec + '.p'), 'wb'))
         sec += frame_rate
     end_time = time.time()
     print("Time cost {} with sec {}".format(end_time-start_time, sec))
