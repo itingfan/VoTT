@@ -13,7 +13,7 @@ from helper import average_tracker_with_det
 from multi_tracker import MultiTracker
 
 
-cv2_visual = True
+cv2_visual = False
 default_type, default_tag, default_points = 2, None, None
 
 
