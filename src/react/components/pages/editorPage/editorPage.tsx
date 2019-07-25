@@ -541,6 +541,15 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 const responses = await this.track(videoClip, regions);
 
                 // 4. create/update assetMetadata
+                // create tag
+                var tag = {};
+                regions.forEach((region => {
+                    if(region.tags && region.tags.length === 1 && !tag.hasOwnProperty(region.id))
+                    {
+                        tag[region.id] = region.tags[0];
+                    }
+                }));
+
                 let currentProject = this.props.project;
                 responses.forEach((response) => {
                     // create assetMetadata  
@@ -553,7 +562,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                             metadata.regions = response.regions;
                             metadata.regions.forEach((region) => {
                                 
-                                region.tags = [region.tags[0]];
+                                region.tags = (region.id in tag) ? [tag[region.id]] : ["Kuan"];
                                 const points = [];
                                 points.push({x: region.boundingBox.left, y: region.boundingBox.top});
                                 points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});

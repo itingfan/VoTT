@@ -205,6 +205,7 @@ export default class CanvasDisplay extends React.Component<
                 const tag = CanvasHelpers.getTagsDescriptor(this.props.project.tags, regions[i]);
                 const color = tag.primary.color;
 
+                ctx.beginPath();
                 ctx.globalAlpha = 1;
                 ctx.strokeStyle  = color;
                 ctx.lineWidth = 5;
@@ -215,8 +216,9 @@ export default class CanvasDisplay extends React.Component<
                     boundingBox.height
                 );
                 ctx.stroke();
+                ctx.closePath();
 
-
+                ctx.beginPath();
                 ctx.globalAlpha = 0.25;
                 ctx.fillStyle  = color;
                 ctx.fillRect(
@@ -225,8 +227,8 @@ export default class CanvasDisplay extends React.Component<
                     boundingBox.width,
                     boundingBox.height)
                 ; 
-
                 ctx.stroke();
+                ctx.closePath();
             }
         }
     };
