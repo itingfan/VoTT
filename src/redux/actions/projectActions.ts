@@ -33,6 +33,7 @@ export default interface IProjectActions {
     saveAssetMetadata(project: IProject, assetMetadata: IAssetMetadata, force?: boolean): Promise<IAssetMetadata>;
     updateProjectTag(project: IProject, oldTagName: string, newTagName: string): Promise<IAssetMetadata[]>;
     deleteProjectTag(project: IProject, tagName): Promise<IAssetMetadata[]>;
+    addProjectAssets(assetsMetadata: IAssetMetadata[]): Promise<void>;
 }
 
 /**
@@ -208,6 +209,35 @@ export function updateProjectTag(project: IProject, oldTagName: string, newTagNa
         dispatch(updateProjectTagAction(updatedProject));
 
         return assetUpdates;
+    };
+}
+
+/**
+ * Updates a project and all asset references from oldTagName to newTagName
+ * @param project The project to update tags
+ * @param oldTagName The old tag name
+ * @param newTagName The new tag name
+ */
+export function addProjectAssets(assetsMetadata: IAssetMetadata[])
+    : (dispatch: Dispatch, getState: () => IApplicationState) => Promise<void> {
+    return async (dispatch: Dispatch, getState: () => IApplicationState) => {
+        const currentProject = getState().currentProject;
+        const updatedAssets = currentProject.assets;
+        
+        // Save updated assets
+        await assetsMetadata.forEachAsync(async (assetMetadata) => {
+            updatedAssets[assetMetadata.asset.id] = assetMetadata.asset;
+        });
+
+        
+        const updatedProject = {
+            ...currentProject,
+            assets: updatedAssets,
+        };
+
+        // Save updated project 
+        await saveProject(updatedProject)(dispatch, getState);
+        dispatch(updateProjectTagAction(updatedProject));
     };
 }
 
