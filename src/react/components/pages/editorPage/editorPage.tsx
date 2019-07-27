@@ -443,12 +443,6 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         const response = await axios.post("http://localhost:5000/track", {"clip": clip, "init_regions": initRegions}, requestHeader)
         const result: TimestampRegionPair[] = [];
         //const fpsmore = 1/15;
-        //const regions: IRegion[] = [];
-        //regions.push({id:"weichih", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 0, top: 1, width: 2, height: 3}});
-        //regions.push({id:"kualu", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 4, top: 5, width: 6, height: 7}});
-        //regions.push({id:"liang", type: RegionType.Rectangle, tags: ["person"], points: [], boundingBox: {left: 8, top: 9, width: 10, height: 11}});
-        //let pair: TimestampRegionPair = {timestamp: clip.startTimestamp+1, regions: regions};
-        //result.push(pair);
         if(response && response.data) {
             response.data.forEach(element => {
                 if (element.regions)
@@ -529,13 +523,14 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             if (assetMetadata.regions.length > 0 && this.props.project.videoSettings.tracking)
             {
                 // 1. Get all regions with current update region
+                console.log("track: " + assetMetadata.regions.length + ' objects')
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
 
                 const videoClip: VideoClip = {id: [assetMetadata.asset.parent.id, assetMetadata.asset.parent.format].join("."), 
 
                                             startTimestamp: assetMetadata.asset.timestamp, 
-                                            endTimestamp: 10.0};
+                                            endTimestamp: assetMetadata.asset.timestamp+3};
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
                 const responses = await this.track(videoClip, regions);
@@ -544,13 +539,14 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 // create tag
                 var tag = {};
                 regions.forEach((region => {
-                    if(region.tags && region.tags.length === 1 && !tag.hasOwnProperty(region.id))
+                    if(region.tags && region.tags.length === 1)
                     {
                         tag[region.id] = region.tags[0];
                     }
                 }));
 
                 let currentProject = this.props.project;
+                let newAssetsMetadata: IAssetMetadata[] = [];
                 responses.forEach((response) => {
                     // create assetMetadata  
                     if (response && response.regions && response.regions.length !== 0)
@@ -559,30 +555,26 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                         let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
                         assetMetadataToAdd.then(async (metadata) => {
                             metadata.asset.state = AssetState.Tagged;
-                            metadata.regions = response.regions;
-                            metadata.regions.forEach((region) => {
-                                
-                                region.tags = (region.id in tag) ? [tag[region.id]] : ["Kuan"];
+                            response.regions.forEach((region) => {
+                                region.tags = (region.id in tag) ? [tag[region.id]] : null;
                                 const points = [];
                                 points.push({x: region.boundingBox.left, y: region.boundingBox.top});
                                 points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});
                                 points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top + region.boundingBox.height});
                                 points.push({x: region.boundingBox.left, y: region.boundingBox.top + region.boundingBox.height});
                                 region.points = points;
+                                region.type = RegionType.Rectangle;
                             })
-
-                            var newProject = {...currentProject}; 
-                            var newAsset = {[predictedAsset.id]: predictedAsset};
-                            newProject.assets = {...newProject.assets, ...newAsset};
-                            currentProject = newProject;
-                            // Save to .Vott file
-                            await this.props.actions.saveProject(currentProject);
+                            metadata.regions = response.regions.filter((region) => region.tags != null);
+                            newAssetsMetadata.push(metadata);
 
                             // Save a Asset.json file
                             await this.props.actions.saveAssetMetadata(currentProject, metadata, true);
                         });
                     }
                 });
+                // Save to .Vott file
+                await this.props.actions.addProjectAssets(newAssetsMetadata);
             }
         }
 

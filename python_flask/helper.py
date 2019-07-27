@@ -36,8 +36,9 @@ def average_tracker_with_det(tracked_boxes, det_boxes, iou_thre=0.3, conf_thre=0
                 target_d_boxes = np.vstack((target_d_boxes, det_boxes[d_idx][:4]))
         if target_d_boxes.shape[0] == 0:
             mean_tracked_box.append(t_box)
+            max_ious.append(iou_thre) # todo: confirm this makes sense
         else:
             mean_tracked_box.append(np.mean(target_d_boxes, axis=0))
-        max_ious.append(max(iou_list[t_idx]))
+            max_ious.append(max(iou_list[t_idx]))
     return mean_tracked_box, max_ious
 

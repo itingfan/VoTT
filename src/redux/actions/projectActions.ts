@@ -213,10 +213,8 @@ export function updateProjectTag(project: IProject, oldTagName: string, newTagNa
 }
 
 /**
- * Updates a project and all asset references from oldTagName to newTagName
- * @param project The project to update tags
- * @param oldTagName The old tag name
- * @param newTagName The new tag name
+ * Add new assets to project file
+ * @param assetsMetadata The assetsMetadata to add
  */
 export function addProjectAssets(assetsMetadata: IAssetMetadata[])
     : (dispatch: Dispatch, getState: () => IApplicationState) => Promise<void> {
@@ -225,7 +223,7 @@ export function addProjectAssets(assetsMetadata: IAssetMetadata[])
         const updatedAssets = currentProject.assets;
         
         // Save updated assets
-        await assetsMetadata.forEachAsync(async (assetMetadata) => {
+        assetsMetadata.forEach((assetMetadata) => {
             updatedAssets[assetMetadata.asset.id] = assetMetadata.asset;
         });
 
@@ -353,10 +351,17 @@ export interface IExportProjectAction extends IPayloadAction<string, IProject> {
 }
 
 /**
- * Update Project Tag action type
+ * Add Asset action type
  */
 export interface IUpdateProjectTagAction extends IPayloadAction<string, IProject> {
     type: ActionTypes.UPDATE_PROJECT_TAG_SUCCESS;
+}
+
+/**
+ * Add Asset action type
+ */
+export interface IAddAssetAction extends IPayloadAction<string, IProject> {
+    type: ActionTypes.ADD_ASSET_SUCCESS;
 }
 
 /**
@@ -370,6 +375,10 @@ export interface IDeleteProjectTagAction extends IPayloadAction<string, IProject
  * Instance of Load Project action
  */
 export const loadProjectAction = createPayloadAction<ILoadProjectAction>(ActionTypes.LOAD_PROJECT_SUCCESS);
+/**
+ * Instance of add asset action
+ */
+export const addAssetAction = createPayloadAction<IAddAssetAction>(ActionTypes.ADD_ASSET_SUCCESS);
 /**
  * Instance of Close Project action
  */
