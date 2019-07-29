@@ -221,21 +221,23 @@ export function addProjectAssets(assetsMetadata: IAssetMetadata[])
     return async (dispatch: Dispatch, getState: () => IApplicationState) => {
         const currentProject = getState().currentProject;
         const updatedAssets = currentProject.assets;
-        
+        console.log("Asset! Current: " + Object.keys(updatedAssets).length);
+        console.log("Asset! to add: " + assetsMetadata.length);
         // Save updated assets
         assetsMetadata.forEach((assetMetadata) => {
             updatedAssets[assetMetadata.asset.id] = assetMetadata.asset;
         });
 
-        
+        console.log("Asset! Now: " + Object.keys(updatedAssets).length);
         const updatedProject = {
             ...currentProject,
             assets: updatedAssets,
         };
-
+        console.log("Asset! updatedProject: " + Object.keys(updatedProject.assets).length);
+        
         // Save updated project 
         await saveProject(updatedProject)(dispatch, getState);
-        dispatch(updateProjectTagAction(updatedProject));
+        dispatch(addAssetAction(updatedProject));
     };
 }
 

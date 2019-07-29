@@ -456,7 +456,44 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
         return result;
     }
 
-     private createRequestConfigForTracking(): AxiosRequestConfig {
+    private async createAssets(tag: {}, responses: TimestampRegionPair[], assetService: AssetService, parent: IAsset): Promise<IAssetMetadata[]> {
+        let currentProject = this.props.project;
+        let newAssetsMetadata: IAssetMetadata[] = [];
+        responses.forEach((response) => {
+            // create assetMetadata  
+            if (response && response.regions && response.regions.length !== 0)
+            {
+                const predictedAsset = this.createAssetFromPrediction(response, parent);
+                let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
+                assetMetadataToAdd.then(async (metadata) => {
+                    metadata.asset.state = AssetState.Tagged;
+                    response.regions.forEach((region) => {
+                        region.tags = (region.id in tag) ? [tag[region.id]] : null;
+                        const points = [];
+                        points.push({x: region.boundingBox.left, y: region.boundingBox.top});
+                        points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});
+                        points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top + region.boundingBox.height});
+                        points.push({x: region.boundingBox.left, y: region.boundingBox.top + region.boundingBox.height});
+                        region.points = points;
+                        region.type = RegionType.Rectangle;
+                    })
+                    metadata.regions = response.regions.filter((region) => region.tags != null);
+                    newAssetsMetadata.push(metadata);
+                    console.log("Asset! track: newAssetsMetadata(tmp1): " + newAssetsMetadata.length + " :" + metadata.asset.id);
+                    // Save a Asset.json file
+                    this.props.actions.saveAssetMetadata(currentProject, metadata, true);
+                    console.log("Asset! track: newAssetsMetadata(tmp2): " + newAssetsMetadata.length + " :" + metadata.asset.id);
+                });
+            }
+            
+            console.log("Asset! track: newAssetsMetadata(tmp3): " + newAssetsMetadata.length);
+        });
+        
+        console.log("Asset! track: newAssetsMetadata: " + newAssetsMetadata.length);
+        return newAssetsMetadata;
+    }
+
+    private createRequestConfigForTracking(): AxiosRequestConfig {
         return {
             headers: {
                 "Content-Type": "application/json",
@@ -514,6 +551,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             rootAsset.state = rootAssetMetadata.asset.state;
         }
 
+        console.log("Asset! Editor start: " + assetMetadata.asset.id);
         // Only update asset metadata if state changes or is different
         if (initialState !== assetMetadata.asset.state || this.state.selectedAsset !== assetMetadata) {
 
@@ -523,7 +561,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
             if (assetMetadata.regions.length > 0 && this.props.project.videoSettings.tracking)
             {
                 // 1. Get all regions with current update region
-                console.log("track: " + assetMetadata.regions.length + ' objects')
+                console.log("Asset! track: " + assetMetadata.regions.length + ' objects')
                 const regions = assetMetadata.regions;
                 // 2. Call track function with previous 1.region
 
@@ -534,7 +572,7 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 // 3. Get return timestamp and regions
                 // TODO: Remove below line to trigger tracker
                 const responses = await this.track(videoClip, regions);
-
+                console.log("Asset! track: response: " + responses.length);
                 // 4. create/update assetMetadata
                 // create tag
                 var tag = {};
@@ -545,39 +583,15 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                     }
                 }));
 
-                let currentProject = this.props.project;
-                let newAssetsMetadata: IAssetMetadata[] = [];
-                responses.forEach((response) => {
-                    // create assetMetadata  
-                    if (response && response.regions && response.regions.length !== 0)
-                    {
-                        const predictedAsset = this.createAssetFromPrediction(response, assetMetadata.asset.parent);
-                        let assetMetadataToAdd = assetService.getAssetMetadata(predictedAsset);
-                        assetMetadataToAdd.then(async (metadata) => {
-                            metadata.asset.state = AssetState.Tagged;
-                            response.regions.forEach((region) => {
-                                region.tags = (region.id in tag) ? [tag[region.id]] : null;
-                                const points = [];
-                                points.push({x: region.boundingBox.left, y: region.boundingBox.top});
-                                points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top});
-                                points.push({x: region.boundingBox.left + region.boundingBox.width, y: region.boundingBox.top + region.boundingBox.height});
-                                points.push({x: region.boundingBox.left, y: region.boundingBox.top + region.boundingBox.height});
-                                region.points = points;
-                                region.type = RegionType.Rectangle;
-                            })
-                            metadata.regions = response.regions.filter((region) => region.tags != null);
-                            newAssetsMetadata.push(metadata);
-
-                            // Save a Asset.json file
-                            await this.props.actions.saveAssetMetadata(currentProject, metadata, true);
-                        });
-                    }
-                });
+                const newAssetsMetadata = await this.createAssets(tag, responses, assetService, assetMetadata.asset.parent);
+                
                 // Save to .Vott file
+                console.log("Asset! track: newAssetsMetadata: " + newAssetsMetadata.length)
                 await this.props.actions.addProjectAssets(newAssetsMetadata);
             }
         }
-
+        console.log("Asset! Editor before Save: " + Object.keys(this.props.project.assets).length
+            + " for " + assetMetadata.asset.id);
         await this.props.actions.saveProject(this.props.project);
 
         const childAssets = assetService.getChildAssets(rootAsset);
@@ -592,7 +606,8 @@ export default class EditorPage extends React.Component<IEditorPageProps, IEdito
                 ...rootAsset,
             };
         }
-
+        console.log("Asset! Editor final set state: " + Object.keys(assets).length);
+        console.log("Asset! Editor final set state: child: " + Object.keys(childAssets).length);
         this.setState({ childAssets, assets, isValid: true });
     }
 

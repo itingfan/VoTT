@@ -19,6 +19,7 @@ import {
     ILoadAssetMetadataAction,
     IExportProjectAction,
     IDeleteProjectAction,
+    IAddAssetAction,
 } from "./projectActions";
 import {
     IShowAppErrorAction,
@@ -81,6 +82,7 @@ export type AnyAction = IOtherAction |
     ILoadProjectAction |
     ICloseProjectAction |
     ISaveProjectAction |
+    IAddAssetAction |
     IDeleteProjectAction |
     ILoadProjectAssetsAction |
     ISaveAssetMetadataAction |

@@ -171,15 +171,14 @@ export default class CanvasDisplay extends React.Component<
             }
         }
 
-        if (this.state.currentMetadata) {
-            const canvas = document.getElementById(
-                "canvasDisplay"
-            ) as HTMLCanvasElement;
-            var ctx = canvas.getContext("2d");
+        const canvasDisplay = document.getElementById("canvasDisplay") as HTMLCanvasElement;
+
+        if (this.state.currentMetadata && canvasDisplay) {
+            var ctx = canvasDisplay.getContext("2d");
             ctx.clearRect(0, 0, this.state.size.width, this.state.size.height);
-            var w = canvas.width;
-            canvas.width = 1;
-            canvas.width = w;
+            var w = canvasDisplay.width;
+            canvasDisplay.width = 1;
+            canvasDisplay.width = w;
 
             const regions: IRegion[] = this.state.currentMetadata.regions;
 
