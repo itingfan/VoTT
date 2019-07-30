@@ -42,6 +42,7 @@ def video_od(video_pth, out_dir):
         od_bboxes = detector.detect(frame)
         with open(os.path.join(out_dir, '%.2f' % sec +'.p'), 'wb') as f:
             pickle.dump(od_bboxes, f)
+
         sec += frame_rate
     end_time = time.time()
     print("Time cost {} with sec {}".format(end_time-start_time, sec))

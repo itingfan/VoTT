@@ -22,7 +22,7 @@ def calculate_bbox_ious(tracked_boxes, det_boxes):
     return iou_list
 
 
-def average_tracker_with_det(tracked_boxes, det_boxes, iou_thre=0.3, conf_thre=0.6):
+def average_tracker_with_det(tracked_boxes, det_boxes, iou_thre=0.5, conf_thre=0.6):
     det_boxes = [d_box for d_box in det_boxes if d_box[-1] > conf_thre]
     iou_list = calculate_bbox_ious(tracked_boxes, det_boxes)
 
